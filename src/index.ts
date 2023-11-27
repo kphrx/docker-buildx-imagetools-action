@@ -1,7 +1,14 @@
 /**
  * The entrypoint for the action.
  */
-import { run } from './main'
+import * as core from '@actions/core'
+import { run, cleanup } from './main'
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-run()
+const IsPost = !!core.getState('isPost')
+
+if (!IsPost) {
+  core.saveState('isPost', 'true')
+  run()
+} else {
+  cleanup()
+}

@@ -1,23 +1,33 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Create a manifest list'
+description: 'Create a new image based on source images with Buildx'
+author: 'kphrx'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: 'heart'
-  color: 'red'
+  icon: 'anchor'
+  color: 'blue'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  annotations:
+    description: 'List of annotation to set to the image'
+    required: false
+  dry-run:
+    description: 'Dry run imagetools create'
+    default: 'false'
+  tags:
+    description: 'List of tags'
+    required: false
+  github-token:
+    description: 'GitHub Token used to authenticate against a repository for Git context'
+    default: ${{ github.token }}
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  digest:
+    description: 'Image digest'
+  metadata:
+    description: 'Build result metadata'
 
 runs:
   using: node20
