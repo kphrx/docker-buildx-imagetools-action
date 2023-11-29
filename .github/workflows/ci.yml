@@ -80,27 +80,35 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: network=host
 
       - name: Build linux/amd64 image
         id: amd-build
         uses: docker/build-push-action@v5
         with:
           file: .github/test.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
-          outputs: type=image,name=localhost:5000/name/app,push=true
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+          provenance: false
+          outputs: type=image,oci-mediatypes=true,name=localhost:5000/name/app,push=true
 
       - name: Build linux/arm64 image
         id: arm-build
         uses: docker/build-push-action@v5
         with:
           file: .github/test.Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/arm64
-          outputs: type=image,name=localhost:5000/name/app,push=true
+          provenance: false
+          outputs: type=image,oci-mediatypes=true,name=localhost:5000/name/app,push=true
 
       - name: Test Local Action
         id: test-action
