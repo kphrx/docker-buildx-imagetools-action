@@ -10,6 +10,7 @@ func main() {
   fmt.Println("hello, world")
 }
 EOF
+
 RUN go build -o /bin/hello ./main.go
 
 FROM scratch
