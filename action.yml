@@ -9,6 +9,9 @@ branding:
 
 # Define your inputs here.
 inputs:
+  sources:
+    description: 'List of image sources'
+    required: true
   annotations:
     description: 'List of annotation to set to the image'
     required: false

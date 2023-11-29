@@ -11,6 +11,8 @@ import type {
 
 import { create, createDryRun, inspect } from './imagetools'
 
+import { isNonEmptyArray } from './types'
+
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -29,8 +31,14 @@ export async function run(): Promise<void> {
  */
 async function main(): Promise<void> {
   const annotations = Util.getInputList('annotations', { ignoreComma: true })
+  const sources = Util.getInputList('sources')
   const tags = Util.getInputList('tags')
   const isDryRun = core.getBooleanInput('dry-run')
+
+  if (!isNonEmptyArray(sources)) {
+    throw new Error('needs input sources')
+  }
+  const inputs = { annotations, sources, tags }
 
   const toolkit = new Toolkit()
 
@@ -93,7 +101,7 @@ async function main(): Promise<void> {
   })
 
   if (isDryRun) {
-    const metadata = await createDryRun(toolkit, { annotations })
+    const metadata = await createDryRun(toolkit, inputs)
     if (metadata.length > 0) {
       await core.group(`Metadata`, async () => {
         core.info(metadata)
@@ -103,7 +111,7 @@ async function main(): Promise<void> {
     return
   }
 
-  await create(toolkit, { annotations, tags })
+  await create(toolkit, inputs)
 
   const digest = await inspect(toolkit, tags[0], '{{index .Manifest.Digest}}')
   if (digest.length > 0) {

@@ -2,6 +2,8 @@ import * as core from '@actions/core'
 import { Exec } from '@docker/actions-toolkit/lib/exec'
 import type { Toolkit } from '@docker/actions-toolkit/lib/toolkit'
 
+import type { NonEmptyArray } from './types'
+
 class StdErrError extends Error {
   constructor(stderr: string) {
     super(
@@ -12,12 +14,9 @@ class StdErrError extends Error {
 }
 
 export interface CreateOptions {
-  annotations?: string[]
-  tags?: string[]
-}
-
-export interface CreateDryRunOptions {
-  annotations?: string[]
+  annotations: string[]
+  sources: NonEmptyArray<string>
+  tags: string[]
 }
 
 interface CreateRawOptions extends CreateOptions {
@@ -34,7 +33,7 @@ export async function create(
 
 export async function createDryRun(
   toolkit: Toolkit,
-  opts: CreateDryRunOptions
+  opts: CreateOptions
 ): Promise<string> {
   return await createRaw(toolkit, { ...opts, dryRun: true })
 }
@@ -43,25 +42,22 @@ async function createRaw(
   toolkit: Toolkit,
   opts: CreateRawOptions
 ): Promise<string> {
-  const args = ['imagetools', 'create']
-
-  if (
-    (await toolkit.buildx.versionSatisfies('>=0.12.0')) &&
-    opts.annotations != null
-  ) {
-    for (const annotation of opts.annotations) {
-      args.push('--annotation', annotation)
-    }
-  }
-
-  if (!opts.dryRun && opts.tags != null && opts.tags.length > 0) {
-    for (const tag of opts.tags) {
-      args.push('--tag', tag)
-    }
-  }
+  const args = ['imagetools', 'create', ...opts.sources]
 
   if (opts.dryRun) {
     args.push('--dry-run')
+  } else if (opts.tags.length === 0) {
+    throw new Error('needs input tags or dry-run')
+  }
+
+  for (const tag of opts.tags) {
+    args.push('--tag', tag)
+  }
+
+  if (await toolkit.buildx.versionSatisfies('>=0.12.0')) {
+    for (const annotation of opts.annotations) {
+      args.push('--annotation', annotation)
+    }
   }
 
   const cmd = await toolkit.buildx.getCommand(args)
