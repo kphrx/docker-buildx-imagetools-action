@@ -43,8 +43,8 @@ jobs:
         id: npm-ci-test
         run: npm run ci-test
 
-  test-action:
-    name: GitHub Actions Test
+  test-action-dry-run:
+    name: GitHub Actions Test (w/ --dry-run)
     runs-on: ubuntu-latest
 
     steps:
@@ -56,8 +56,65 @@ jobs:
         id: test-action
         uses: ./
         with:
+          sources: |
+            sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907
+            sha256:c4ba6347b0e4258ce6a6de2401619316f982b7bcc529f73d2a410d0097730204
           dry-run: true
+          tags: alpine:test
 
       - name: Print Output
         id: output
         run: echo "${{ steps.test-action.outputs.metadata }}"
+
+  test-action:
+    name: GitHub Actions Test
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build linux/amd64 image
+        id: amd-build
+        uses: docker/build-push-action@v5
+        with:
+          file: .github/test.Dockerfile
+          platforms: linux/amd64
+          outputs: type=image,name=localhost:5000/name/app,push=true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build linux/arm64 image
+        id: arm-build
+        uses: docker/build-push-action@v5
+        with:
+          file: .github/test.Dockerfile
+          platforms: linux/arm64
+          outputs: type=image,name=localhost:5000/name/app,push=true
+
+      - name: Test Local Action
+        id: test-action
+        uses: ./
+        with:
+          sources: |
+            ${{ steps.amd-build.outputs.digest }}
+            ${{ steps.arm-build.outputs.digest }}
+          tags: localhost:5000/name/app:test
+          annotations:
+            index:org.opencontainers.image.description=Test image
+
+      - name: Print Output
+        id: output
+        run: |
+          echo "${{ steps.test-action.outputs.digest }}"
+          echo "${{ steps.test-action.outputs.metadata }}"
