@@ -1,4 +1,4 @@
-name: 'Create a manifest list'
+name: 'Create OCI/Docker manifest list'
 description: 'Create a new image based on source images with Buildx'
 author: 'kphrx'
 
