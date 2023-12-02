@@ -95408,46 +95408,16 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 4929:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.inspect = exports.createDryRun = exports.create = void 0;
-const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1949);
-class StdErrError extends Error {
-    constructor(stderr) {
-        super(`buildx failed with: ${stderr.match(/(.*)\s*$/)?.[0]?.trim()}` ??
-            0);
-    }
-}
+const types_1 = __nccwpck_require__(5077);
 async function create(toolkit, opts) {
-    const stdout = await createRaw(toolkit, { ...opts, dryRun: false });
-    core.info(stdout);
+    await createRaw(toolkit, { ...opts, dryRun: false });
 }
 exports.create = create;
 async function createDryRun(toolkit, opts) {
@@ -95471,11 +95441,9 @@ async function createRaw(toolkit, opts) {
         }
     }
     const cmd = await toolkit.buildx.getCommand(args);
-    const { exitCode, stdout, stderr } = await exec_1.Exec.getExecOutput(cmd.command, cmd.args, {
-        ignoreReturnCode: true
-    });
+    const { exitCode, stdout, stderr } = await exec_1.Exec.getExecOutput(cmd.command, cmd.args, { silent: opts.dryRun, ignoreReturnCode: true });
     if (stderr.length > 0 && exitCode !== 0) {
-        throw new StdErrError(stderr);
+        throw new types_1.StdErrError(stderr);
     }
     return stdout;
 }
@@ -95489,9 +95457,9 @@ async function inspect(toolkit, name, format) {
     }
     args.push(name);
     const cmd = await toolkit.buildx.getCommand(args);
-    const { exitCode, stdout, stderr } = await exec_1.Exec.getExecOutput(cmd.command, cmd.args, { ignoreReturnCode: true });
+    const { exitCode, stdout, stderr } = await exec_1.Exec.getExecOutput(cmd.command, cmd.args, { silent: true, ignoreReturnCode: true });
     if (stderr.length > 0 && exitCode !== 0) {
-        throw new StdErrError(stderr);
+        throw new types_1.StdErrError(stderr);
     }
     return stdout;
 }
@@ -95675,19 +95643,31 @@ async function main() {
         return;
     }
     await (0, imagetools_1.create)(toolkit, inputs);
-    const digest = await (0, imagetools_1.inspect)(toolkit, tags[0], '{{index .Manifest.Digest}}');
-    if (digest.length > 0) {
-        await core.group(`Digest`, async () => {
-            core.info(digest);
+    try {
+        const digest = await (0, imagetools_1.inspect)(toolkit, tags[0], '{{index .Manifest.Digest}}');
+        if (digest.length > 0) {
             core.setOutput('digest', digest);
-        });
+            await core.group(`Digest`, async () => {
+                core.info(digest);
+            });
+        }
     }
-    const metadata = await (0, imagetools_1.inspect)(toolkit, tags[0], true);
-    if (metadata.length > 0) {
-        await core.group(`Metadata`, async () => {
-            core.info(metadata);
+    catch (e) {
+        if (e instanceof Error)
+            core.info(e.message);
+    }
+    try {
+        const metadata = await (0, imagetools_1.inspect)(toolkit, tags[0], true);
+        if (metadata.length > 0) {
             core.setOutput('metadata', metadata);
-        });
+            await core.group(`Metadata`, async () => {
+                core.info(metadata);
+            });
+        }
+    }
+    catch (e) {
+        if (e instanceof Error)
+            core.info(e.message);
     }
 }
 /**
@@ -95706,7 +95686,14 @@ exports.cleanup = cleanup;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isNonEmptyArray = void 0;
+exports.isNonEmptyArray = exports.StdErrError = void 0;
+class StdErrError extends Error {
+    constructor(stderr) {
+        super(`buildx failed with: ${stderr.match(/(.*)\s*$/)?.[0]?.trim()}` ??
+            0);
+    }
+}
+exports.StdErrError = StdErrError;
 const isNonEmptyArray = (arr) => arr.length > 0;
 exports.isNonEmptyArray = isNonEmptyArray;
 
