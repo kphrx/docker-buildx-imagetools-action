@@ -1,4 +1,4 @@
-# Docker buildx imagetools action
+# Docker Buildx imagetools action
 
 [![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
@@ -16,9 +16,10 @@ See [action.yml](action.yml)
 
 ```yaml
 steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v3
+    with:
+      version: latest
 
 # ...
 
