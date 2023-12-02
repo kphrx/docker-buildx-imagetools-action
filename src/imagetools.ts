@@ -1,17 +1,8 @@
-import * as core from '@actions/core'
 import { Exec } from '@docker/actions-toolkit/lib/exec'
 import type { Toolkit } from '@docker/actions-toolkit/lib/toolkit'
 
+import { StdErrError } from './types'
 import type { NonEmptyArray } from './types'
-
-class StdErrError extends Error {
-  constructor(stderr: string) {
-    super(
-      `buildx failed with: ${stderr.match(/(.*)\s*$/)?.[0]?.trim()}` ??
-        'unknown error'
-    )
-  }
-}
 
 export interface CreateOptions {
   annotations: string[]
@@ -27,8 +18,7 @@ export async function create(
   toolkit: Toolkit,
   opts: CreateOptions
 ): Promise<void> {
-  const stdout = await createRaw(toolkit, { ...opts, dryRun: false })
-  core.info(stdout)
+  await createRaw(toolkit, { ...opts, dryRun: false })
 }
 
 export async function createDryRun(
@@ -64,9 +54,7 @@ async function createRaw(
   const { exitCode, stdout, stderr } = await Exec.getExecOutput(
     cmd.command,
     cmd.args,
-    {
-      ignoreReturnCode: true
-    }
+    { silent: opts.dryRun, ignoreReturnCode: true }
   )
   if (stderr.length > 0 && exitCode !== 0) {
     throw new StdErrError(stderr)
@@ -92,7 +80,7 @@ export async function inspect(
   const { exitCode, stdout, stderr } = await Exec.getExecOutput(
     cmd.command,
     cmd.args,
-    { ignoreReturnCode: true }
+    { silent: true, ignoreReturnCode: true }
   )
   if (stderr.length > 0 && exitCode !== 0) {
     throw new StdErrError(stderr)

@@ -113,20 +113,28 @@ async function main(): Promise<void> {
 
   await create(toolkit, inputs)
 
-  const digest = await inspect(toolkit, tags[0], '{{index .Manifest.Digest}}')
-  if (digest.length > 0) {
-    await core.group(`Digest`, async () => {
-      core.info(digest)
+  try {
+    const digest = await inspect(toolkit, tags[0], '{{index .Manifest.Digest}}')
+    if (digest.length > 0) {
       core.setOutput('digest', digest)
-    })
+      await core.group(`Digest`, async () => {
+        core.info(digest)
+      })
+    }
+  } catch (e) {
+    if (e instanceof Error) core.info(e.message)
   }
 
-  const metadata = await inspect(toolkit, tags[0], true)
-  if (metadata.length > 0) {
-    await core.group(`Metadata`, async () => {
-      core.info(metadata)
+  try {
+    const metadata = await inspect(toolkit, tags[0], true)
+    if (metadata.length > 0) {
       core.setOutput('metadata', metadata)
-    })
+      await core.group(`Metadata`, async () => {
+        core.info(metadata)
+      })
+    }
+  } catch (e) {
+    if (e instanceof Error) core.info(e.message)
   }
 }
 

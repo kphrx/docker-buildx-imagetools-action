@@ -39,7 +39,7 @@ describe('action', () => {
     setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
   })
 
-  it('sets the time output', async () => {
+  it('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
     getBooleanInputMock.mockImplementation((name: string): boolean => {
       switch (name) {
