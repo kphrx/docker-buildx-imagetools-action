@@ -45880,11 +45880,12 @@ class Git {
     }
     static async getDetachedRef() {
         const res = await Git.exec(['show', '-s', '--pretty=%D']);
-        const refMatch = res.match(/^HEAD, (.*)$/);
-        if (!refMatch) {
+        // Can be "HEAD, <tagname>" or "grafted, HEAD, <tagname>"
+        const refMatch = res.match(/^(grafted, )?HEAD, (.*)$/);
+        if (!refMatch || !refMatch[2]) {
             throw new Error(`Cannot find detached HEAD ref in "${res}"`);
         }
-        const ref = refMatch[1].trim();
+        const ref = refMatch[2].trim();
         // Tag refs are formatted as "tag: <tagname>"
         if (ref.startsWith('tag: ')) {
             return `refs/tags/${ref.split(':')[1].trim()}`;
@@ -47458,7 +47459,7 @@ __export(dist_src_exports, {
 module.exports = __toCommonJS(dist_src_exports);
 
 // pkg/dist-src/version.js
-var VERSION = "10.1.5";
+var VERSION = "10.2.0";
 
 // pkg/dist-src/generated/endpoints.js
 var Endpoints = {
