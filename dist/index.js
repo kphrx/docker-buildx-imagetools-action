@@ -45890,10 +45890,15 @@ class Git {
         if (ref.startsWith('tag: ')) {
             return `refs/tags/${ref.split(':')[1].trim()}`;
         }
-        // Otherwise, it's a branch "<origin>/<branch-name>, <branch-name>"
+        // Branch refs are formatted as "<origin>/<branch-name>, <branch-name>"
         const branchMatch = ref.match(/^[^/]+\/[^/]+, (.+)$/);
         if (branchMatch) {
             return `refs/heads/${branchMatch[1].trim()}`;
+        }
+        // Pull request merge refs are formatted as "pull/<number>/<state>"
+        const prMatch = ref.match(/^pull\/\d+\/(head|merge)$/);
+        if (prMatch) {
+            return `refs/${ref}`;
         }
         throw new Error(`Unsupported detached HEAD ref in "${res}"`);
     }
@@ -46126,12 +46131,14 @@ const io = __importStar(__nccwpck_require__(7436));
 const sync_1 = __nccwpck_require__(4393);
 class Util {
     static getInputList(name, opts) {
+        return this.getList(core.getInput(name), opts);
+    }
+    static getList(input, opts) {
         const res = [];
-        const items = core.getInput(name);
-        if (items == '') {
+        if (input == '') {
             return res;
         }
-        const records = (0, sync_1.parse)(items, {
+        const records = (0, sync_1.parse)(input, {
             columns: false,
             relaxQuotes: true,
             comment: opts?.comment,
