@@ -44467,7 +44467,7 @@ class Bake {
             silent: true
         }).then(res => {
             if (res.stderr.length > 0 && res.exitCode != 0) {
-                throw new Error(res.stderr);
+                throw new Error(`cannot parse bake definitions: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
             }
             return JSON.parse(res.stdout.trim());
         });
