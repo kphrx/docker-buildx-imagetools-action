@@ -319,7 +319,8 @@ function createHttpClient() {
     return new http_client_1.HttpClient('actions/cache', [bearerCredentialHandler], getRequestOptions());
 }
 function getCacheVersion(paths, compressionMethod, enableCrossOsArchive = false) {
-    const components = paths;
+    // don't pass changes upstream
+    const components = paths.slice();
     // Add compression method to cache version to restore
     // compressed cache as per compression method
     if (compressionMethod) {
@@ -608,26 +609,21 @@ function resolvePaths(patterns) {
             implicitDescendants: false
         });
         try {
-            for (var _e = true, _f = __asyncValues(globber.globGenerator()), _g; _g = yield _f.next(), _a = _g.done, !_a;) {
+            for (var _e = true, _f = __asyncValues(globber.globGenerator()), _g; _g = yield _f.next(), _a = _g.done, !_a; _e = true) {
                 _c = _g.value;
                 _e = false;
-                try {
-                    const file = _c;
-                    const relativeFile = path
-                        .relative(workspace, file)
-                        .replace(new RegExp(`\\${path.sep}`, 'g'), '/');
-                    core.debug(`Matched: ${relativeFile}`);
-                    // Paths are made relative so the tar entries are all relative to the root of the workspace.
-                    if (relativeFile === '') {
-                        // path.relative returns empty string if workspace and file are equal
-                        paths.push('.');
-                    }
-                    else {
-                        paths.push(`${relativeFile}`);
-                    }
+                const file = _c;
+                const relativeFile = path
+                    .relative(workspace, file)
+                    .replace(new RegExp(`\\${path.sep}`, 'g'), '/');
+                core.debug(`Matched: ${relativeFile}`);
+                // Paths are made relative so the tar entries are all relative to the root of the workspace.
+                if (relativeFile === '') {
+                    // path.relative returns empty string if workspace and file are equal
+                    paths.push('.');
                 }
-                finally {
-                    _e = true;
+                else {
+                    paths.push(`${relativeFile}`);
                 }
             }
         }
@@ -711,7 +707,10 @@ function assertDefined(name, value) {
 exports.assertDefined = assertDefined;
 function isGhes() {
     const ghUrl = new URL(process.env['GITHUB_SERVER_URL'] || 'https://github.com');
-    return ghUrl.hostname.toUpperCase() !== 'GITHUB.COM';
+    const hostname = ghUrl.hostname.trimEnd().toUpperCase();
+    const isGitHubHost = hostname === 'GITHUB.COM';
+    const isGheHost = hostname.endsWith('.GHE.COM') || hostname.endsWith('.GHE.LOCALHOST');
+    return !isGitHubHost && !isGheHost;
 }
 exports.isGhes = isGhes;
 //# sourceMappingURL=cacheUtils.js.map
@@ -729,7 +728,7 @@ var CacheFilename;
 (function (CacheFilename) {
     CacheFilename["Gzip"] = "cache.tgz";
     CacheFilename["Zstd"] = "cache.tzst";
-})(CacheFilename = exports.CacheFilename || (exports.CacheFilename = {}));
+})(CacheFilename || (exports.CacheFilename = CacheFilename = {}));
 var CompressionMethod;
 (function (CompressionMethod) {
     CompressionMethod["Gzip"] = "gzip";
@@ -737,12 +736,12 @@ var CompressionMethod;
     // This enum is for earlier version of zstd that does not have --long support
     CompressionMethod["ZstdWithoutLong"] = "zstd-without-long";
     CompressionMethod["Zstd"] = "zstd";
-})(CompressionMethod = exports.CompressionMethod || (exports.CompressionMethod = {}));
+})(CompressionMethod || (exports.CompressionMethod = CompressionMethod = {}));
 var ArchiveToolType;
 (function (ArchiveToolType) {
     ArchiveToolType["GNU"] = "gnu";
     ArchiveToolType["BSD"] = "bsd";
-})(ArchiveToolType = exports.ArchiveToolType || (exports.ArchiveToolType = {}));
+})(ArchiveToolType || (exports.ArchiveToolType = ArchiveToolType = {}));
 // The default number of retry attempts.
 exports.DefaultRetryAttempts = 2;
 // The default delay in milliseconds between retry attempts.
@@ -10848,6 +10847,18 @@ class AzureKeyCredential {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * Tests an object to determine whether it implements KeyCredential.
+ *
+ * @param credential - The assumed KeyCredential to be tested.
+ */
+function isKeyCredential(credential) {
+    return coreUtil.isObjectWithProperties(credential, ["key"]) && typeof credential.key === "string";
+}
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * A static name/key-based credential that supports updating
  * the underlying name and key values.
@@ -10908,6 +10919,7 @@ function isNamedKeyCredential(credential) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * A static-signature-based credential that supports updating
  * the underlying signature value.
@@ -10977,6 +10989,7 @@ function isTokenCredential(credential) {
 exports.AzureKeyCredential = AzureKeyCredential;
 exports.AzureNamedKeyCredential = AzureNamedKeyCredential;
 exports.AzureSASCredential = AzureSASCredential;
+exports.isKeyCredential = isKeyCredential;
 exports.isNamedKeyCredential = isNamedKeyCredential;
 exports.isSASCredential = isSASCredential;
 exports.isTokenCredential = isTokenCredential;
@@ -16992,10 +17005,10 @@ module.exports = function(dst, src) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 var logger$1 = __nccwpck_require__(3233);
-var abortController = __nccwpck_require__(2557);
 var coreUtil = __nccwpck_require__(1333);
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * The `@azure/logger` configuration for this package.
  * @internal
@@ -17014,6 +17027,7 @@ const POLL_INTERVAL_IN_MS = 2000;
 const terminalStates = ["succeeded", "canceled", "failed"];
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Deserializes the state
  */
@@ -17177,6 +17191,7 @@ async function pollOperation(inputs) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 function getOperationLocationPollingUrl(inputs) {
     const { azureAsyncOperation, operationLocation } = inputs;
     return operationLocation !== null && operationLocation !== void 0 ? operationLocation : azureAsyncOperation;
@@ -17318,7 +17333,7 @@ function parseRetryAfter({ rawResponse }) {
     return undefined;
 }
 function getErrorFromResponse(response) {
-    const error = response.flatResponse.error;
+    const error = accessBodyProperty(response, "error");
     if (!error) {
         logger.warning(`The long-running operation failed but there is no error property in the response's body`);
         return;
@@ -17414,12 +17429,14 @@ function getOperationStatus({ rawResponse }, state) {
             throw new Error(`Internal error: Unexpected operation mode: ${mode}`);
     }
 }
-function getResourceLocation({ flatResponse }, state) {
-    if (typeof flatResponse === "object") {
-        const resourceLocation = flatResponse.resourceLocation;
-        if (resourceLocation !== undefined) {
-            state.config.resourceLocation = resourceLocation;
-        }
+function accessBodyProperty({ flatResponse, rawResponse }, prop) {
+    var _a, _b;
+    return (_a = flatResponse === null || flatResponse === void 0 ? void 0 : flatResponse[prop]) !== null && _a !== void 0 ? _a : (_b = rawResponse.body) === null || _b === void 0 ? void 0 : _b[prop];
+}
+function getResourceLocation(res, state) {
+    const loc = accessBodyProperty(res, "resourceLocation");
+    if (loc && typeof loc === "string") {
+        state.config.resourceLocation = loc;
     }
     return state.config.resourceLocation;
 }
@@ -17454,6 +17471,7 @@ async function pollHttpOperation(inputs) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 const createStateProxy$1 = () => ({
     /**
      * The state at this point is created to be of type OperationState<TResult>.
@@ -17505,7 +17523,7 @@ function buildCreatePoller(inputs) {
                 setErrorAsResult: !resolveOnUnsuccessful,
             });
         let resultPromise;
-        const abortController$1 = new abortController.AbortController();
+        const abortController = new AbortController();
         const handlers = new Map();
         const handleProgressEvents = async () => handlers.forEach((h) => h(state));
         const cancelErrMsg = "Operation was canceled";
@@ -17516,7 +17534,7 @@ function buildCreatePoller(inputs) {
             isDone: () => ["succeeded", "failed", "canceled"].includes(state.status),
             isStopped: () => resultPromise === undefined,
             stopPolling: () => {
-                abortController$1.abort();
+                abortController.abort();
             },
             toString: () => JSON.stringify({
                 state,
@@ -17528,15 +17546,28 @@ function buildCreatePoller(inputs) {
             },
             pollUntilDone: (pollOptions) => (resultPromise !== null && resultPromise !== void 0 ? resultPromise : (resultPromise = (async () => {
                 const { abortSignal: inputAbortSignal } = pollOptions || {};
-                const { signal: abortSignal } = inputAbortSignal
-                    ? new abortController.AbortController([inputAbortSignal, abortController$1.signal])
-                    : abortController$1;
-                if (!poller.isDone()) {
-                    await poller.poll({ abortSignal });
-                    while (!poller.isDone()) {
-                        await coreUtil.delay(currentPollIntervalInMs, { abortSignal });
+                // In the future we can use AbortSignal.any() instead
+                function abortListener() {
+                    abortController.abort();
+                }
+                const abortSignal = abortController.signal;
+                if (inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.aborted) {
+                    abortController.abort();
+                }
+                else if (!abortSignal.aborted) {
+                    inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.addEventListener("abort", abortListener, { once: true });
+                }
+                try {
+                    if (!poller.isDone()) {
                         await poller.poll({ abortSignal });
+                        while (!poller.isDone()) {
+                            await coreUtil.delay(currentPollIntervalInMs, { abortSignal });
+                            await poller.poll({ abortSignal });
+                        }
                     }
+                }
+                finally {
+                    inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.removeEventListener("abort", abortListener);
                 }
                 if (resolveOnUnsuccessful) {
                     return poller.getResult();
@@ -17607,6 +17638,7 @@ function buildCreatePoller(inputs) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * Creates a poller that can be used to poll a long-running operation.
  * @param lro - Description of the long-running operation
@@ -17648,6 +17680,7 @@ async function createHttpPoller(lro, options) {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 const createStateProxy = () => ({
     initState: (config) => ({ config, isStarted: true }),
     setCanceled: (state) => (state.isCancelled = true),
@@ -18126,6 +18159,7 @@ class Poller {
 }
 
 // Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * The LRO Engine, a class that performs polling.
  */
@@ -18504,7 +18538,9 @@ exports.setSpanContext = setSpanContext;
 "use strict";
 
 
-var abortController = __nccwpck_require__(2557);
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+var abortController = __nccwpck_require__(4200);
 var crypto = __nccwpck_require__(6113);
 
 // Copyright (c) Microsoft Corporation.
@@ -18576,7 +18612,7 @@ function delay(timeInMs, options) {
  */
 async function cancelablePromiseRace(abortablePromiseBuilders, options) {
     var _a, _b;
-    const aborter = new abortController.AbortController();
+    const aborter = new AbortController();
     function abortHandler() {
         aborter.abort();
     }
@@ -18858,6 +18894,47 @@ exports.objectHasProperty = objectHasProperty;
 exports.randomUUID = randomUUID;
 exports.stringToUint8Array = stringToUint8Array;
 exports.uint8ArrayToString = uint8ArrayToString;
+//# sourceMappingURL=index.js.map
+
+
+/***/ }),
+
+/***/ 4200:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+/**
+ * This error is thrown when an asynchronous operation has been aborted.
+ * Check for this error by testing the `name` that the name property of the
+ * error matches `"AbortError"`.
+ *
+ * @example
+ * ```ts
+ * const controller = new AbortController();
+ * controller.abort();
+ * try {
+ *   doAsyncWork(controller.signal)
+ * } catch (e) {
+ *   if (e.name === 'AbortError') {
+ *     // handle abort error here.
+ *   }
+ * }
+ * ```
+ */
+class AbortError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AbortError";
+    }
+}
+
+exports.AbortError = AbortError;
 //# sourceMappingURL=index.js.map
 
 
@@ -44980,6 +45057,7 @@ const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const sync_1 = __nccwpck_require__(4393);
 const context_1 = __nccwpck_require__(4051);
+const github_1 = __nccwpck_require__(6276);
 const parseKvp = (kvp) => {
     const delimiterIndex = kvp.indexOf('=');
     const key = kvp.substring(0, delimiterIndex);
@@ -45055,7 +45133,7 @@ class Inputs {
             return input;
         }
         try {
-            return core.getBooleanInput(name) ? `builder-id=${context_1.Context.provenanceBuilderID()}` : 'false';
+            return core.getBooleanInput(name) ? `builder-id=${github_1.GitHub.workflowRunURL}` : 'false';
         }
         catch (err) {
             // not a valid boolean, so we assume it's a string
@@ -45064,7 +45142,7 @@ class Inputs {
     }
     static resolveProvenanceAttrs(input) {
         if (!input) {
-            return `builder-id=${context_1.Context.provenanceBuilderID()}`;
+            return `builder-id=${github_1.GitHub.workflowRunURL}`;
         }
         // parse attributes from input
         const fields = (0, sync_1.parse)(input, {
@@ -45082,7 +45160,7 @@ class Inputs {
             }
         }
         // if not add builder-id attribute
-        return `${input},builder-id=${context_1.Context.provenanceBuilderID()}`;
+        return `${input},builder-id=${github_1.GitHub.workflowRunURL}`;
     }
     static hasLocalExporter(exporters) {
         return Inputs.hasExporterType('local', exporters);
@@ -45176,17 +45254,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Install = void 0;
-const crypto_1 = __importDefault(__nccwpck_require__(6113));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const os_1 = __importDefault(__nccwpck_require__(2037));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const httpm = __importStar(__nccwpck_require__(6255));
 const tc = __importStar(__nccwpck_require__(7784));
-const cache = __importStar(__nccwpck_require__(7799));
 const semver = __importStar(__nccwpck_require__(1383));
 const util = __importStar(__nccwpck_require__(3837));
 const buildx_1 = __nccwpck_require__(9994);
+const cache_1 = __nccwpck_require__(1455);
 const context_1 = __nccwpck_require__(4051);
 const exec_1 = __nccwpck_require__(1949);
 const docker_1 = __nccwpck_require__(976);
@@ -45199,10 +45276,11 @@ class Install {
     }
     /*
      * Download buildx binary from GitHub release
-     * @param version semver version or latest
+     * @param v: version semver version or latest
+     * @param ghaNoCache: disable binary caching in GitHub Actions cache backend
      * @returns path to the buildx binary
      */
-    async download(v) {
+    async download(v, ghaNoCache) {
         const version = await Install.getDownloadVersion(v);
         core.debug(`Install.download version: ${version.version}`);
         const release = await Install.getRelease(version);
@@ -45213,7 +45291,13 @@ class Install {
         if (!semver.valid(c)) {
             throw new Error(`Invalid Buildx version "${vspec}".`);
         }
-        const installCache = new InstallCache(version.key != 'official' ? `buildx-dl-bin-${version.key}` : 'buildx-dl-bin', vspec);
+        const installCache = new cache_1.Cache({
+            htcName: version.key != 'official' ? `buildx-dl-bin-${version.key}` : 'buildx-dl-bin',
+            htcVersion: vspec,
+            baseCacheDir: path_1.default.join(buildx_1.Buildx.configDir, '.bin'),
+            cacheFile: os_1.default.platform() == 'win32' ? 'docker-buildx.exe' : 'docker-buildx',
+            ghaNoCache: ghaNoCache
+        });
         const cacheFoundPath = await installCache.find();
         if (cacheFoundPath) {
             core.info(`Buildx binary found in ${cacheFoundPath}`);
@@ -45229,13 +45313,20 @@ class Install {
     }
     /*
      * Build buildx binary from source
-     * @param gitContext git repo context
+     * @param gitContext: git repo context
+     * @param ghaNoCache: disable binary caching in GitHub Actions cache backend
      * @returns path to the buildx binary
      */
-    async build(gitContext) {
+    async build(gitContext, ghaNoCache) {
         const vspec = await this.vspec(gitContext);
         core.debug(`Install.build vspec: ${vspec}`);
-        const installCache = new InstallCache('buildx-build-bin', vspec);
+        const installCache = new cache_1.Cache({
+            htcName: 'buildx-build-bin',
+            htcVersion: vspec,
+            baseCacheDir: path_1.default.join(buildx_1.Buildx.configDir, '.bin'),
+            cacheFile: os_1.default.platform() == 'win32' ? 'docker-buildx.exe' : 'docker-buildx',
+            ghaNoCache: ghaNoCache
+        });
         const cacheFoundPath = await installCache.find();
         if (cacheFoundPath) {
             core.info(`Buildx binary found in ${cacheFoundPath}`);
@@ -45375,7 +45466,7 @@ class Install {
         }
         const [owner, repo] = baseURL.substring('https://github.com/'.length).split('/');
         const key = `${owner}/${util_1.Util.trimSuffix(repo, '.git')}/${sha}`;
-        const hash = crypto_1.default.createHash('sha256').update(key).digest('hex');
+        const hash = util_1.Util.hash(key);
         core.info(`Use ${hash} version spec cache key for ${key}`);
         return hash;
     }
@@ -45423,49 +45514,109 @@ class Install {
     }
 }
 exports.Install = Install;
-class InstallCache {
-    htcName;
-    htcVersion;
+//# sourceMappingURL=install.js.map
+
+/***/ }),
+
+/***/ 1455:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+/**
+ * Copyright 2023 actions-toolkit authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Cache = void 0;
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const os_1 = __importDefault(__nccwpck_require__(2037));
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const core = __importStar(__nccwpck_require__(2186));
+const tc = __importStar(__nccwpck_require__(7784));
+const cache = __importStar(__nccwpck_require__(7799));
+const util = __importStar(__nccwpck_require__(3837));
+class Cache {
+    opts;
     ghaCacheKey;
+    ghaNoCache;
     cacheDir;
-    cacheFile;
     cachePath;
-    constructor(htcName, htcVersion) {
-        this.htcName = htcName;
-        this.htcVersion = htcVersion;
-        this.ghaCacheKey = util.format('%s-%s-%s', this.htcName, this.htcVersion, this.platform());
-        this.cacheDir = path_1.default.join(buildx_1.Buildx.configDir, '.bin', htcVersion, this.platform());
-        this.cacheFile = os_1.default.platform() == 'win32' ? 'docker-buildx.exe' : 'docker-buildx';
-        this.cachePath = path_1.default.join(this.cacheDir, this.cacheFile);
+    constructor(opts) {
+        this.opts = opts;
+        this.ghaCacheKey = util.format('%s-%s-%s', this.opts.htcName, this.opts.htcVersion, this.platform());
+        this.ghaNoCache = this.opts.ghaNoCache;
+        this.cacheDir = path_1.default.join(this.opts.baseCacheDir, this.opts.htcVersion, this.platform());
+        this.cachePath = path_1.default.join(this.cacheDir, this.opts.cacheFile);
         if (!fs_1.default.existsSync(this.cacheDir)) {
             fs_1.default.mkdirSync(this.cacheDir, { recursive: true });
         }
     }
     async save(file) {
-        core.debug(`InstallCache.save ${file}`);
+        core.debug(`Cache.save ${file}`);
         const cachePath = this.copyToCache(file);
-        const htcPath = await tc.cacheDir(this.cacheDir, this.htcName, this.htcVersion, this.platform());
-        core.debug(`InstallCache.save cached to hosted tool cache ${htcPath}`);
-        if (cache.isFeatureAvailable()) {
-            core.debug(`InstallCache.save caching ${this.ghaCacheKey} to GitHub Actions cache`);
+        const htcPath = await tc.cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
+        core.debug(`Cache.save cached to hosted tool cache ${htcPath}`);
+        if (!this.ghaNoCache && cache.isFeatureAvailable()) {
+            core.debug(`Cache.save caching ${this.ghaCacheKey} to GitHub Actions cache`);
             await cache.saveCache([this.cacheDir], this.ghaCacheKey);
         }
         return cachePath;
     }
     async find() {
-        let htcPath = tc.find(this.htcName, this.htcVersion, this.platform());
+        let htcPath = tc.find(this.opts.htcName, this.opts.htcVersion, this.platform());
         if (htcPath) {
             core.info(`Restored from hosted tool cache ${htcPath}`);
-            return this.copyToCache(`${htcPath}/${this.cacheFile}`);
+            return this.copyToCache(`${htcPath}/${this.opts.cacheFile}`);
         }
-        if (cache.isFeatureAvailable()) {
+        if (!this.ghaNoCache && cache.isFeatureAvailable()) {
             core.debug(`GitHub Actions cache feature available`);
             if (await cache.restoreCache([this.cacheDir], this.ghaCacheKey)) {
                 core.info(`Restored ${this.ghaCacheKey} from GitHub Actions cache`);
-                htcPath = await tc.cacheDir(this.cacheDir, this.htcName, this.htcVersion, this.platform());
+                htcPath = await tc.cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
                 core.info(`Restored to hosted tool cache ${htcPath}`);
-                return this.copyToCache(`${htcPath}/${this.cacheFile}`);
+                return this.copyToCache(`${htcPath}/${this.opts.cacheFile}`);
             }
+        }
+        else if (this.ghaNoCache) {
+            core.info(`GitHub Actions cache disabled`);
         }
         else {
             core.info(`GitHub Actions cache feature not available`);
@@ -45475,7 +45626,6 @@ class InstallCache {
     copyToCache(file) {
         core.debug(`Copying ${file} to ${this.cachePath}`);
         fs_1.default.copyFileSync(file, this.cachePath);
-        fs_1.default.chmodSync(this.cachePath, '0755');
         return this.cachePath;
     }
     platform() {
@@ -45484,7 +45634,8 @@ class InstallCache {
         return `${os_1.default.platform()}-${os_1.default.arch()}${arm_version ? 'v' + arm_version : ''}`;
     }
 }
-//# sourceMappingURL=install.js.map
+exports.Cache = Cache;
+//# sourceMappingURL=cache.js.map
 
 /***/ }),
 
@@ -45984,6 +46135,9 @@ class GitHub {
     static get apiURL() {
         return process.env.GITHUB_API_URL || 'https://api.github.com';
     }
+    static get workflowRunURL() {
+        return `${GitHub.serverURL}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`;
+    }
     static get actionsRuntimeToken() {
         const token = process.env['ACTIONS_RUNTIME_TOKEN'] || '';
         return token ? (0, jwt_decode_1.jwtDecode)(token) : undefined;
@@ -46125,6 +46279,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Util = void 0;
+const crypto_1 = __importDefault(__nccwpck_require__(6113));
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
@@ -46235,6 +46390,9 @@ class Util {
     }
     static sleep(seconds) {
         return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+    static hash(input) {
+        return crypto_1.default.createHash('sha256').update(input).digest('hex');
     }
 }
 exports.Util = Util;
@@ -46363,7 +46521,7 @@ var import_graphql = __nccwpck_require__(8467);
 var import_auth_token = __nccwpck_require__(334);
 
 // pkg/dist-src/version.js
-var VERSION = "5.0.2";
+var VERSION = "5.1.0";
 
 // pkg/dist-src/index.js
 var noop = () => {
@@ -47466,7 +47624,7 @@ __export(dist_src_exports, {
 module.exports = __toCommonJS(dist_src_exports);
 
 // pkg/dist-src/version.js
-var VERSION = "10.2.0";
+var VERSION = "10.4.0";
 
 // pkg/dist-src/generated/endpoints.js
 var Endpoints = {
@@ -47593,6 +47751,9 @@ var Endpoints = {
       "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
     ],
     getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getCustomOidcSubClaimForRepo: [
+      "GET /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
     getEnvironmentPublicKey: [
       "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
     ],
@@ -47745,6 +47906,9 @@ var Endpoints = {
     setCustomLabelsForSelfHostedRunnerForRepo: [
       "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
     ],
+    setCustomOidcSubClaimForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
     setGithubActionsDefaultWorkflowPermissionsOrganization: [
       "PUT /orgs/{org}/actions/permissions/workflow"
     ],
@@ -47814,6 +47978,7 @@ var Endpoints = {
     listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
     markNotificationsAsRead: ["PUT /notifications"],
     markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+    markThreadAsDone: ["DELETE /notifications/threads/{thread_id}"],
     markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
     setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
     setThreadSubscription: [
@@ -48090,10 +48255,10 @@ var Endpoints = {
     updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
   },
   copilot: {
-    addCopilotForBusinessSeatsForTeams: [
+    addCopilotSeatsForTeams: [
       "POST /orgs/{org}/copilot/billing/selected_teams"
     ],
-    addCopilotForBusinessSeatsForUsers: [
+    addCopilotSeatsForUsers: [
       "POST /orgs/{org}/copilot/billing/selected_users"
     ],
     cancelCopilotSeatAssignmentForTeams: [
@@ -48406,9 +48571,23 @@ var Endpoints = {
       }
     ]
   },
+  oidc: {
+    getOidcCustomSubTemplateForOrg: [
+      "GET /orgs/{org}/actions/oidc/customization/sub"
+    ],
+    updateOidcCustomSubTemplateForOrg: [
+      "PUT /orgs/{org}/actions/oidc/customization/sub"
+    ]
+  },
   orgs: {
     addSecurityManagerTeam: [
       "PUT /orgs/{org}/security-managers/teams/{team_slug}"
+    ],
+    assignTeamToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    assignUserToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/users/{username}/{role_id}"
     ],
     blockUser: ["PUT /orgs/{org}/blocks/{username}"],
     cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
@@ -48418,6 +48597,7 @@ var Endpoints = {
     convertMemberToOutsideCollaborator: [
       "PUT /orgs/{org}/outside_collaborators/{username}"
     ],
+    createCustomOrganizationRole: ["POST /orgs/{org}/organization-roles"],
     createInvitation: ["POST /orgs/{org}/invitations"],
     createOrUpdateCustomProperties: ["PATCH /orgs/{org}/properties/schema"],
     createOrUpdateCustomPropertiesValuesForRepos: [
@@ -48428,6 +48608,9 @@ var Endpoints = {
     ],
     createWebhook: ["POST /orgs/{org}/hooks"],
     delete: ["DELETE /orgs/{org}"],
+    deleteCustomOrganizationRole: [
+      "DELETE /orgs/{org}/organization-roles/{role_id}"
+    ],
     deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
     enableOrDisableSecurityProductOnAllOrgRepos: [
       "POST /orgs/{org}/{security_product}/{enablement}"
@@ -48439,6 +48622,7 @@ var Endpoints = {
     ],
     getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
     getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+    getOrgRole: ["GET /orgs/{org}/organization-roles/{role_id}"],
     getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
     getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
     getWebhookDelivery: [
@@ -48454,6 +48638,12 @@ var Endpoints = {
     listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
     listMembers: ["GET /orgs/{org}/members"],
     listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+    listOrgRoleTeams: ["GET /orgs/{org}/organization-roles/{role_id}/teams"],
+    listOrgRoleUsers: ["GET /orgs/{org}/organization-roles/{role_id}/users"],
+    listOrgRoles: ["GET /orgs/{org}/organization-roles"],
+    listOrganizationFineGrainedPermissions: [
+      "GET /orgs/{org}/organization-fine-grained-permissions"
+    ],
     listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
     listPatGrantRepositories: [
       "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
@@ -48468,6 +48658,9 @@ var Endpoints = {
     listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
     listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
     listWebhooks: ["GET /orgs/{org}/hooks"],
+    patchCustomOrganizationRole: [
+      "PATCH /orgs/{org}/organization-roles/{role_id}"
+    ],
     pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
     redeliverWebhookDelivery: [
       "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
@@ -48491,6 +48684,18 @@ var Endpoints = {
     ],
     reviewPatGrantRequestsInBulk: [
       "POST /orgs/{org}/personal-access-token-requests"
+    ],
+    revokeAllOrgRolesTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}"
+    ],
+    revokeAllOrgRolesUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}"
+    ],
+    revokeOrgRoleTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    revokeOrgRoleUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}/{role_id}"
     ],
     setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
     setPublicMembershipForAuthenticatedUser: [
@@ -48782,6 +48987,9 @@ var Endpoints = {
       {},
       { mapToData: "users" }
     ],
+    cancelPagesDeployment: [
+      "POST /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}/cancel"
+    ],
     checkAutomatedSecurityFixes: [
       "GET /repos/{owner}/{repo}/automated-security-fixes"
     ],
@@ -48817,12 +49025,15 @@ var Endpoints = {
     createForAuthenticatedUser: ["POST /user/repos"],
     createFork: ["POST /repos/{owner}/{repo}/forks"],
     createInOrg: ["POST /orgs/{org}/repos"],
+    createOrUpdateCustomPropertiesValues: [
+      "PATCH /repos/{owner}/{repo}/properties/values"
+    ],
     createOrUpdateEnvironment: [
       "PUT /repos/{owner}/{repo}/environments/{environment_name}"
     ],
     createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
     createOrgRuleset: ["POST /orgs/{org}/rulesets"],
-    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployment"],
+    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployments"],
     createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
     createRelease: ["POST /repos/{owner}/{repo}/releases"],
     createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
@@ -48975,6 +49186,9 @@ var Endpoints = {
     getOrgRulesets: ["GET /orgs/{org}/rulesets"],
     getPages: ["GET /repos/{owner}/{repo}/pages"],
     getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getPagesDeployment: [
+      "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}"
+    ],
     getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
     getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
     getPullRequestReviewProtection: [
@@ -49185,6 +49399,9 @@ var Endpoints = {
     ]
   },
   securityAdvisories: {
+    createFork: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/forks"
+    ],
     createPrivateVulnerabilityReport: [
       "POST /repos/{owner}/{repo}/security-advisories/reports"
     ],
