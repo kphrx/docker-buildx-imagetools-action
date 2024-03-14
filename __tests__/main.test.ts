@@ -13,16 +13,16 @@ import * as main from '../src/main'
 const runMock = jest.spyOn(main, 'run')
 
 // Other utilities
-const timeRegex = /^{/
+const metadataRegex = /^{/
 
 // Mock the GitHub Actions core library
-// let debugMock: jest.SpyInstance
-// let groupMock: jest.SpyInstance
-let errorMock: jest.SpyInstance
-let getInputMock: jest.SpyInstance
-let getBooleanInputMock: jest.SpyInstance
-let setFailedMock: jest.SpyInstance
-let setOutputMock: jest.SpyInstance
+// let debugMock: jest.SpiedFunction<typeof core.debug>
+// let groupMock: jest.SpiedFunction<typeof core.group>
+let errorMock: jest.SpiedFunction<typeof core.error>
+let getInputMock: jest.SpiedFunction<typeof core.getInput>
+let getBooleanInputMock: jest.SpiedFunction<typeof core.getBooleanInput>
+let setFailedMock: jest.SpiedFunction<typeof core.setFailed>
+let setOutputMock: jest.SpiedFunction<typeof core.setOutput>
 
 describe('action', () => {
   beforeEach(() => {
@@ -41,7 +41,7 @@ describe('action', () => {
 
   it('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
-    getBooleanInputMock.mockImplementation((name: string): boolean => {
+    getBooleanInputMock.mockImplementation(name => {
       switch (name) {
         case 'dry-run':
           return true
@@ -49,7 +49,7 @@ describe('action', () => {
           return false
       }
     })
-    getInputMock.mockImplementation((name: string): string => {
+    getInputMock.mockImplementation(name => {
       switch (name) {
         case 'sources':
           return 'sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907,sha256:c4ba6347b0e4258ce6a6de2401619316f982b7bcc529f73d2a410d0097730204'
@@ -68,20 +68,20 @@ describe('action', () => {
     expect(setOutputMock).toHaveBeenNthCalledWith(
       1,
       'metadata',
-      expect.stringMatching(timeRegex)
+      expect.stringMatching(metadataRegex)
     )
     expect(errorMock).not.toHaveBeenCalled()
   })
 
   it('sets a failed status', async () => {
     // Set the action's inputs as return values from core.getInput()
-    getBooleanInputMock.mockImplementation((name: string): boolean => {
+    getBooleanInputMock.mockImplementation(name => {
       switch (name) {
         default:
           return false
       }
     })
-    getInputMock.mockImplementation((name: string): string => {
+    getInputMock.mockImplementation(name => {
       switch (name) {
         case 'sources':
           return ''
