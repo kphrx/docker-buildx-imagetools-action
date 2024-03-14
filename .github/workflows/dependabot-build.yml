@@ -14,7 +14,8 @@ jobs:
     # Map the step output to a job output for subsequent jobs
     outputs:
       dependency-type: ${{ steps.dependabot-metadata.outputs.dependency-type }}
-      package-ecosystem: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
+      package-ecosystem:
+        ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,7 +30,10 @@ jobs:
     needs: [fetch-dependabot-metadata]
 
     # We only need to build the dist/ folder if the PR relates a production NPM dependency, otherwise we don't expect changes.
-    if: needs.fetch-dependabot-metadata.outputs.package-ecosystem == 'npm_and_yarn' && contains(fromJson('["direct:production", "indirect"]'), needs.fetch-dependabot-metadata.outputs.dependency-type)
+    if:
+      needs.fetch-dependabot-metadata.outputs.package-ecosystem ==
+      'npm_and_yarn' && contains(fromJson('["direct:production", "indirect"]'),
+      needs.fetch-dependabot-metadata.outputs.dependency-type)
     steps:
       - name: Generate token
         id: generate_token

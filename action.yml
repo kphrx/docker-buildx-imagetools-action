@@ -22,7 +22,8 @@ inputs:
     description: 'List of tags'
     required: false
   github-token:
-    description: 'GitHub Token used to authenticate against a repository for Git context'
+    description:
+      'GitHub Token used to authenticate against a repository for Git context'
     default: ${{ github.token }}
 
 # Define your outputs here.

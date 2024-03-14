@@ -119,8 +119,7 @@ jobs:
             ${{ steps.amd-build.outputs.digest }}
             ${{ steps.arm-build.outputs.digest }}
           tags: localhost:5000/name/app:test
-          annotations:
-            index:org.opencontainers.image.description=Test image
+          annotations: index:org.opencontainers.image.description=Test image
 
       - name: Print Output
         id: output
