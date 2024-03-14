@@ -21,7 +21,7 @@ steps:
     with:
       version: latest
 
-# ...
+  # ...
 
   - name: Create manifest list
     uses: kphrx/docker-buildx-imagetools-action@v0.1.0
