@@ -2,6 +2,11 @@ name: Compile dependabot updates
 
 on:
   pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   fetch-dependabot-metadata:
