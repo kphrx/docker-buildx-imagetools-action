@@ -7180,7 +7180,7 @@ class HttpClient {
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
         }
-        if (this._keepAlive && !useProxy) {
+        if (!useProxy) {
             agent = this._agent;
         }
         // if agent is already assigned use that agent.
@@ -7212,15 +7212,11 @@ class HttpClient {
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
         }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
             agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -44648,10 +44644,16 @@ class Builder {
         return ok;
     }
     async inspect(name) {
+        // always enable debug for inspect command, so we can display additional
+        // fields such as features: https://github.com/docker/buildx/pull/1854
+        const envs = Object.assign({}, process.env, {
+            DEBUG: '1'
+        });
         const cmd = await this.buildx.getCommand(['inspect', name]);
         return await exec_1.Exec.getExecOutput(cmd.command, cmd.args, {
             ignoreReturnCode: true,
-            silent: true
+            silent: true,
+            env: envs
         }).then(res => {
             if (res.stderr.length > 0 && res.exitCode != 0) {
                 throw new Error(res.stderr.trim());
@@ -44674,7 +44676,7 @@ class Builder {
                 continue;
             }
             switch (true) {
-                case lkey == 'name': {
+                case lkey == 'name':
                     parsingType = undefined;
                     if (builder.name == undefined) {
                         builder.name = value;
@@ -44690,42 +44692,36 @@ class Builder {
                         currentNode = { name: value };
                     }
                     break;
-                }
-                case lkey == 'driver': {
+                case lkey == 'driver':
                     parsingType = undefined;
                     builder.driver = value;
                     break;
-                }
-                case lkey == 'last activity': {
+                case lkey == 'last activity':
                     parsingType = undefined;
                     builder.lastActivity = new Date(value);
                     break;
-                }
-                case lkey == 'endpoint': {
+                case lkey == 'endpoint':
                     parsingType = undefined;
                     currentNode.endpoint = value;
                     break;
-                }
-                case lkey == 'driver options': {
+                case lkey == 'driver options':
                     parsingType = undefined;
                     currentNode['driver-opts'] = (value.match(/([a-zA-Z0-9_.]+)="([^"]*)"/g) || []).map(v => v.replace(/^(.*)="(.*)"$/g, '$1=$2'));
                     break;
-                }
-                case lkey == 'status': {
+                case lkey == 'status':
                     parsingType = undefined;
                     currentNode.status = value;
                     break;
-                }
-                case lkey == 'flags': {
+                case lkey == 'buildkit daemon flags':
+                case lkey == 'flags': // buildx < v0.13
                     parsingType = undefined;
                     currentNode['buildkitd-flags'] = value;
                     break;
-                }
-                case lkey == 'buildkit': {
+                case lkey == 'buildkit version':
+                case lkey == 'buildkit': // buildx < v0.13
                     parsingType = undefined;
                     currentNode.buildkit = value;
                     break;
-                }
                 case lkey == 'platforms': {
                     parsingType = undefined;
                     if (!value) {
@@ -44748,21 +44744,28 @@ class Builder {
                     currentNode.platforms = platforms.join(',');
                     break;
                 }
-                case lkey == 'labels': {
+                case lkey == 'features':
+                    parsingType = 'features';
+                    currentNode.features = {};
+                    break;
+                case lkey == 'labels':
                     parsingType = 'label';
                     currentNode.labels = {};
                     break;
-                }
-                case lkey.startsWith('gc policy rule#'): {
+                case lkey.startsWith('gc policy rule#'):
                     parsingType = 'gcpolicy';
                     if (currentNode.gcPolicy && currentGCPolicy) {
                         currentNode.gcPolicy.push(currentGCPolicy);
                         currentGCPolicy = undefined;
                     }
                     break;
-                }
                 default: {
                     switch (parsingType || '') {
+                        case 'features': {
+                            currentNode.features = currentNode.features || {};
+                            currentNode.features[key.trim()] = Boolean(value);
+                            break;
+                        }
                         case 'label': {
                             currentNode.labels = currentNode.labels || {};
                             currentNode.labels[key.trim()] = value;
