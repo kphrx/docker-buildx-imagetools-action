@@ -7180,7 +7180,7 @@ class HttpClient {
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
         }
-        if (this._keepAlive && !useProxy) {
+        if (!useProxy) {
             agent = this._agent;
         }
         // if agent is already assigned use that agent.
@@ -7212,15 +7212,11 @@ class HttpClient {
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
         }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
             agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -44501,12 +44497,15 @@ class Bake {
     constructor(opts) {
         this.buildx = opts?.buildx || new buildx_1.Buildx();
     }
-    async parseDefinitions(sources, targets, overrides, load, push, workdir) {
+    async getDefinition(cmdOpts, execOptions) {
+        execOptions = execOptions || { ignoreReturnCode: true };
+        execOptions.ignoreReturnCode = true;
         const args = ['bake'];
         let remoteDef;
         const files = [];
+        const sources = [...(cmdOpts.files || []), cmdOpts.source];
         if (sources) {
-            for (const source of sources.map(v => v.trim())) {
+            for (const source of sources.map(v => (v ? v.trim() : ''))) {
                 if (source.length == 0) {
                     continue;
                 }
@@ -44515,7 +44514,7 @@ class Bake {
                     continue;
                 }
                 if (remoteDef) {
-                    throw new Error(`Only one remote bake definition is allowed`);
+                    throw new Error(`Only one remote bake definition can be defined`);
                 }
                 remoteDef = source;
             }
@@ -44526,28 +44525,36 @@ class Bake {
         for (const file of files) {
             args.push('--file', file);
         }
-        if (overrides) {
-            for (const override of overrides) {
+        if (cmdOpts.overrides) {
+            for (const override of cmdOpts.overrides) {
                 args.push('--set', override);
             }
         }
-        if (load) {
+        if (cmdOpts.load) {
             args.push('--load');
         }
-        if (push) {
+        if (cmdOpts.noCache) {
+            args.push('--no-cache');
+        }
+        if (cmdOpts.provenance) {
+            args.push('--provenance', cmdOpts.provenance);
+        }
+        if (cmdOpts.push) {
             args.push('--push');
         }
-        const printCmd = await this.buildx.getCommand([...args, '--print', ...(targets || [])]);
-        return await exec_1.Exec.getExecOutput(printCmd.command, printCmd.args, {
-            cwd: workdir,
-            ignoreReturnCode: true,
-            silent: true
-        }).then(res => {
+        if (cmdOpts.sbom) {
+            args.push('--sbom', cmdOpts.sbom);
+        }
+        const printCmd = await this.buildx.getCommand([...args, '--print', ...(cmdOpts.targets || [])]);
+        return await exec_1.Exec.getExecOutput(printCmd.command, printCmd.args, execOptions).then(res => {
             if (res.stderr.length > 0 && res.exitCode != 0) {
                 throw new Error(`cannot parse bake definitions: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
             }
-            return JSON.parse(res.stdout.trim());
+            return Bake.parseDefinition(res.stdout.trim());
         });
+    }
+    static parseDefinition(dt) {
+        return JSON.parse(dt);
     }
     static hasLocalExporter(def) {
         return inputs_1.Inputs.hasExporterType('local', Bake.exporters(def));
@@ -44648,10 +44655,16 @@ class Builder {
         return ok;
     }
     async inspect(name) {
+        // always enable debug for inspect command, so we can display additional
+        // fields such as features: https://github.com/docker/buildx/pull/1854
+        const envs = Object.assign({}, process.env, {
+            DEBUG: '1'
+        });
         const cmd = await this.buildx.getCommand(['inspect', name]);
         return await exec_1.Exec.getExecOutput(cmd.command, cmd.args, {
             ignoreReturnCode: true,
-            silent: true
+            silent: true,
+            env: envs
         }).then(res => {
             if (res.stderr.length > 0 && res.exitCode != 0) {
                 throw new Error(res.stderr.trim());
@@ -44674,7 +44687,7 @@ class Builder {
                 continue;
             }
             switch (true) {
-                case lkey == 'name': {
+                case lkey == 'name':
                     parsingType = undefined;
                     if (builder.name == undefined) {
                         builder.name = value;
@@ -44690,42 +44703,36 @@ class Builder {
                         currentNode = { name: value };
                     }
                     break;
-                }
-                case lkey == 'driver': {
+                case lkey == 'driver':
                     parsingType = undefined;
                     builder.driver = value;
                     break;
-                }
-                case lkey == 'last activity': {
+                case lkey == 'last activity':
                     parsingType = undefined;
                     builder.lastActivity = new Date(value);
                     break;
-                }
-                case lkey == 'endpoint': {
+                case lkey == 'endpoint':
                     parsingType = undefined;
                     currentNode.endpoint = value;
                     break;
-                }
-                case lkey == 'driver options': {
+                case lkey == 'driver options':
                     parsingType = undefined;
                     currentNode['driver-opts'] = (value.match(/([a-zA-Z0-9_.]+)="([^"]*)"/g) || []).map(v => v.replace(/^(.*)="(.*)"$/g, '$1=$2'));
                     break;
-                }
-                case lkey == 'status': {
+                case lkey == 'status':
                     parsingType = undefined;
                     currentNode.status = value;
                     break;
-                }
-                case lkey == 'flags': {
+                case lkey == 'buildkit daemon flags':
+                case lkey == 'flags': // buildx < v0.13
                     parsingType = undefined;
                     currentNode['buildkitd-flags'] = value;
                     break;
-                }
-                case lkey == 'buildkit': {
+                case lkey == 'buildkit version':
+                case lkey == 'buildkit': // buildx < v0.13
                     parsingType = undefined;
                     currentNode.buildkit = value;
                     break;
-                }
                 case lkey == 'platforms': {
                     parsingType = undefined;
                     if (!value) {
@@ -44748,21 +44755,28 @@ class Builder {
                     currentNode.platforms = platforms.join(',');
                     break;
                 }
-                case lkey == 'labels': {
+                case lkey == 'features':
+                    parsingType = 'features';
+                    currentNode.features = {};
+                    break;
+                case lkey == 'labels':
                     parsingType = 'label';
                     currentNode.labels = {};
                     break;
-                }
-                case lkey.startsWith('gc policy rule#'): {
+                case lkey.startsWith('gc policy rule#'):
                     parsingType = 'gcpolicy';
                     if (currentNode.gcPolicy && currentGCPolicy) {
                         currentNode.gcPolicy.push(currentGCPolicy);
                         currentGCPolicy = undefined;
                     }
                     break;
-                }
                 default: {
                     switch (parsingType || '') {
+                        case 'features': {
+                            currentNode.features = currentNode.features || {};
+                            currentNode.features[key.trim()] = Boolean(value);
+                            break;
+                        }
                         case 'label': {
                             currentNode.labels = currentNode.labels || {};
                             currentNode.labels[key.trim()] = value;
@@ -45058,6 +45072,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const sync_1 = __nccwpck_require__(4393);
 const context_1 = __nccwpck_require__(4051);
 const github_1 = __nccwpck_require__(6276);
+const util_1 = __nccwpck_require__(8662);
 const parseKvp = (kvp) => {
     const delimiterIndex = kvp.indexOf('=');
     const key = kvp.substring(0, delimiterIndex);
@@ -45191,6 +45206,44 @@ class Inputs {
             }
         }
         return false;
+    }
+    static hasAttestationType(name, attrs) {
+        const records = (0, sync_1.parse)(attrs, {
+            delimiter: ',',
+            trim: true,
+            columns: false,
+            relaxColumnCount: true
+        });
+        for (const record of records) {
+            for (const [key, value] of record.map((chunk) => chunk.split('=').map(item => item.trim()))) {
+                if (key == 'type' && value == name) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    static resolveAttestationAttrs(attrs) {
+        const records = (0, sync_1.parse)(attrs, {
+            delimiter: ',',
+            trim: true,
+            columns: false,
+            relaxColumnCount: true
+        });
+        const res = [];
+        for (const record of records) {
+            for (const attr of record) {
+                try {
+                    // https://github.com/docker/buildx/blob/8abef5908705e49f7ba88ef8c957e1127b597a2a/util/buildflags/attests.go#L13-L21
+                    const v = util_1.Util.parseBool(attr);
+                    res.push(`disabled=${!v}`);
+                }
+                catch (err) {
+                    res.push(attr);
+                }
+            }
+        }
+        return res.join(',');
     }
     static hasGitAuthTokenSecret(secrets) {
         for (const secret of secrets) {
@@ -45579,6 +45632,7 @@ class Cache {
     ghaNoCache;
     cacheDir;
     cachePath;
+    static POST_CACHE_KEY = 'postCache';
     constructor(opts) {
         this.opts = opts;
         this.ghaCacheKey = util.format('%s-%s-%s', this.opts.htcName, this.opts.htcVersion, this.platform());
@@ -45595,8 +45649,11 @@ class Cache {
         const htcPath = await tc.cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
         core.debug(`Cache.save cached to hosted tool cache ${htcPath}`);
         if (!this.ghaNoCache && cache.isFeatureAvailable()) {
-            core.debug(`Cache.save caching ${this.ghaCacheKey} to GitHub Actions cache`);
-            await cache.saveCache([this.cacheDir], this.ghaCacheKey);
+            core.debug(`Cache.save sending ${this.ghaCacheKey} to post state`);
+            core.saveState(Cache.POST_CACHE_KEY, JSON.stringify({
+                dir: this.cacheDir,
+                key: this.ghaCacheKey
+            }));
         }
         return cachePath;
     }
@@ -45611,7 +45668,7 @@ class Cache {
             if (await cache.restoreCache([this.cacheDir], this.ghaCacheKey)) {
                 core.info(`Restored ${this.ghaCacheKey} from GitHub Actions cache`);
                 htcPath = await tc.cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
-                core.info(`Restored to hosted tool cache ${htcPath}`);
+                core.info(`Cached to hosted tool cache ${htcPath}`);
                 return this.copyToCache(`${htcPath}/${this.opts.cacheFile}`);
             }
         }
@@ -45622,6 +45679,26 @@ class Cache {
             core.info(`GitHub Actions cache feature not available`);
         }
         return '';
+    }
+    static async post() {
+        const state = core.getState(Cache.POST_CACHE_KEY);
+        if (!state) {
+            core.info(`State not set`);
+            return Promise.resolve(undefined);
+        }
+        let cacheState;
+        try {
+            cacheState = JSON.parse(state);
+        }
+        catch (e) {
+            throw new Error(`Failed to parse cache post state: ${e}`);
+        }
+        if (!cacheState.dir || !cacheState.key) {
+            throw new Error(`Invalid cache post state: ${state}`);
+        }
+        core.info(`Caching ${cacheState.key} to GitHub Actions cache`);
+        await cache.saveCache([cacheState.dir], cacheState.key);
+        return cacheState;
     }
     copyToCache(file) {
         core.debug(`Copying ${file} to ${this.cachePath}`);
@@ -46393,6 +46470,27 @@ class Util {
     }
     static hash(input) {
         return crypto_1.default.createHash('sha256').update(input).digest('hex');
+    }
+    // https://github.com/golang/go/blob/f6b93a4c358b28b350dd8fe1780c1f78e520c09c/src/strconv/atob.go#L7-L18
+    static parseBool(str) {
+        switch (str) {
+            case '1':
+            case 't':
+            case 'T':
+            case 'true':
+            case 'TRUE':
+            case 'True':
+                return true;
+            case '0':
+            case 'f':
+            case 'F':
+            case 'false':
+            case 'FALSE':
+            case 'False':
+                return false;
+            default:
+                throw new Error(`parseBool syntax error: ${str}`);
+        }
     }
 }
 exports.Util = Util;
