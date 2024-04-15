@@ -44500,6 +44500,11 @@ class Bake {
     async getDefinition(cmdOpts, execOptions) {
         execOptions = execOptions || { ignoreReturnCode: true };
         execOptions.ignoreReturnCode = true;
+        if (cmdOpts.githubToken) {
+            execOptions.env = Object.assign({}, process.env, {
+                BUILDX_BAKE_GIT_AUTH_TOKEN: cmdOpts.githubToken
+            });
+        }
         const args = ['bake'];
         let remoteDef;
         const files = [];
@@ -45119,10 +45124,12 @@ class Inputs {
         return undefined;
     }
     static resolveBuildSecretString(kvp) {
-        return Inputs.resolveBuildSecret(kvp, false);
+        const [key, file] = Inputs.resolveBuildSecret(kvp, false);
+        return `id=${key},src=${file}`;
     }
     static resolveBuildSecretFile(kvp) {
-        return Inputs.resolveBuildSecret(kvp, true);
+        const [key, file] = Inputs.resolveBuildSecret(kvp, true);
+        return `id=${key},src=${file}`;
     }
     static resolveBuildSecretEnv(kvp) {
         const [key, value] = parseKvp(kvp);
@@ -45139,7 +45146,7 @@ class Inputs {
         }
         const secretFile = context_1.Context.tmpName({ tmpdir: context_1.Context.tmpDir() });
         fs_1.default.writeFileSync(secretFile, value);
-        return `id=${key},src=${secretFile}`;
+        return [key, secretFile];
     }
     static getProvenanceInput(name) {
         const input = core.getInput(name);
@@ -45857,7 +45864,10 @@ const os_1 = __importDefault(__nccwpck_require__(2037));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
+const context_1 = __nccwpck_require__(4051);
+const cache_1 = __nccwpck_require__(1455);
 const exec_1 = __nccwpck_require__(1949);
+const util_1 = __nccwpck_require__(8662);
 class Docker {
     static get configDir() {
         return process.env.DOCKER_CONFIG || path_1.default.join(os_1.default.homedir(), '.docker');
@@ -45901,6 +45911,89 @@ class Docker {
     }
     static async printInfo() {
         await exec_1.Exec.exec('docker', ['info']);
+    }
+    static parseRepoTag(image) {
+        let sepPos;
+        const digestPos = image.indexOf('@');
+        const colonPos = image.lastIndexOf(':');
+        if (digestPos >= 0) {
+            // priority on digest
+            sepPos = digestPos;
+        }
+        else if (colonPos >= 0) {
+            sepPos = colonPos;
+        }
+        else {
+            return {
+                repository: image,
+                tag: 'latest'
+            };
+        }
+        const tag = image.slice(sepPos + 1);
+        if (tag.indexOf('/') === -1) {
+            return {
+                repository: image.slice(0, sepPos),
+                tag: tag
+            };
+        }
+        return {
+            repository: image,
+            tag: 'latest'
+        };
+    }
+    static async pull(image, cache) {
+        const parsedImage = Docker.parseRepoTag(image);
+        const repoSanitized = parsedImage.repository.replace(/[^a-zA-Z0-9.]+/g, '--');
+        const tagSanitized = parsedImage.tag.replace(/[^a-zA-Z0-9.]+/g, '--');
+        const imageCache = new cache_1.Cache({
+            htcName: repoSanitized,
+            htcVersion: tagSanitized,
+            baseCacheDir: path_1.default.join(Docker.configDir, '.cache', 'images', repoSanitized),
+            cacheFile: 'image.tar'
+        });
+        let cacheFoundPath;
+        if (cache) {
+            cacheFoundPath = await imageCache.find();
+            if (cacheFoundPath) {
+                core.info(`Image found from cache in ${cacheFoundPath}`);
+                await exec_1.Exec.getExecOutput(`docker`, ['load', '-i', cacheFoundPath], {
+                    ignoreReturnCode: true
+                }).then(res => {
+                    if (res.stderr.length > 0 && res.exitCode != 0) {
+                        core.warning(`Failed to load image from cache: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+                    }
+                });
+            }
+        }
+        let pulled = true;
+        await exec_1.Exec.getExecOutput(`docker`, ['pull', image], {
+            ignoreReturnCode: true
+        }).then(res => {
+            if (res.stderr.length > 0 && res.exitCode != 0) {
+                pulled = false;
+                const err = res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error';
+                if (cacheFoundPath) {
+                    core.warning(`Failed to pull image, using one from cache: ${err}`);
+                }
+                else {
+                    throw new Error(err);
+                }
+            }
+        });
+        if (cache && pulled) {
+            const imageTarPath = path_1.default.join(context_1.Context.tmpDir(), `${util_1.Util.hash(image)}.tar`);
+            await exec_1.Exec.getExecOutput(`docker`, ['save', '-o', imageTarPath, image], {
+                ignoreReturnCode: true
+            }).then(async (res) => {
+                if (res.stderr.length > 0 && res.exitCode != 0) {
+                    core.warning(`Failed to save image: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+                }
+                else {
+                    const cachePath = await imageCache.save(imageTarPath);
+                    core.info(`Image cached to ${cachePath}`);
+                }
+            });
+        }
     }
 }
 exports.Docker = Docker;
@@ -59860,35 +59953,43 @@ const coerce = (version, options) => {
 
   let match = null
   if (!options.rtl) {
-    match = version.match(re[t.COERCE])
+    match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE])
   } else {
     // Find the right-most coercible string that does not share
     // a terminus with a more left-ward coercible string.
     // Eg, '1.2.3.4' wants to coerce '2.3.4', not '3.4' or '4'
+    // With includePrerelease option set, '1.2.3.4-rc' wants to coerce '2.3.4-rc', not '2.3.4'
     //
     // Walk through the string checking with a /g regexp
     // Manually set the index so as to pick up overlapping matches.
     // Stop when we get a match that ends at the string end, since no
     // coercible string can be more right-ward without the same terminus.
+    const coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL]
     let next
-    while ((next = re[t.COERCERTL].exec(version)) &&
+    while ((next = coerceRtlRegex.exec(version)) &&
         (!match || match.index + match[0].length !== version.length)
     ) {
       if (!match ||
             next.index + next[0].length !== match.index + match[0].length) {
         match = next
       }
-      re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length
+      coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length
     }
     // leave it in a clean state
-    re[t.COERCERTL].lastIndex = -1
+    coerceRtlRegex.lastIndex = -1
   }
 
   if (match === null) {
     return null
   }
 
-  return parse(`${match[2]}.${match[3] || '0'}.${match[4] || '0'}`, options)
+  const major = match[2]
+  const minor = match[3] || '0'
+  const patch = match[4] || '0'
+  const prerelease = options.includePrerelease && match[5] ? `-${match[5]}` : ''
+  const build = options.includePrerelease && match[6] ? `+${match[6]}` : ''
+
+  return parse(`${major}.${minor}.${patch}${prerelease}${build}`, options)
 }
 module.exports = coerce
 
@@ -60580,12 +60681,17 @@ createToken('XRANGELOOSE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`)
 
 // Coercion.
 // Extract anything that could conceivably be a part of a valid semver
-createToken('COERCE', `${'(^|[^\\d])' +
+createToken('COERCEPLAIN', `${'(^|[^\\d])' +
               '(\\d{1,'}${MAX_SAFE_COMPONENT_LENGTH}})` +
               `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
-              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
+              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`)
+createToken('COERCE', `${src[t.COERCEPLAIN]}(?:$|[^\\d])`)
+createToken('COERCEFULL', src[t.COERCEPLAIN] +
+              `(?:${src[t.PRERELEASE]})?` +
+              `(?:${src[t.BUILD]})?` +
               `(?:$|[^\\d])`)
 createToken('COERCERTL', src[t.COERCE], true)
+createToken('COERCERTLFULL', src[t.COERCEFULL], true)
 
 // Tilde ranges.
 // Meaning is "reasonably at or greater than"
