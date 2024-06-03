@@ -7,7 +7,7 @@ import { Util } from '@docker/actions-toolkit/lib/util'
 import type {
   ConfigFile,
   ProxyConfig
-} from '@docker/actions-toolkit/lib/types/docker'
+} from '@docker/actions-toolkit/lib/types/docker/docker'
 
 import { create, createDryRun, inspect } from './imagetools'
 
