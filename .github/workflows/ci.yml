@@ -93,7 +93,7 @@ jobs:
 
       - name: Build linux/amd64 image
         id: amd-build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: .github/test.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
@@ -103,7 +103,7 @@ jobs:
 
       - name: Build linux/arm64 image
         id: arm-build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: .github/test.Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
