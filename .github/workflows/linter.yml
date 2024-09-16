@@ -36,12 +36,12 @@ jobs:
         run: npm ci
 
       - name: Lint Codebase
-        uses: super-linter/super-linter/slim@v6
+        uses: super-linter/super-linter/slim@v6.8.0
         env:
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: dist/**/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TYPESCRIPT_DEFAULT_STYLE: prettier
+          VALIDATE_TYPESCRIPT_STANDARD: false
           VALIDATE_ALL_CODEBASE: true
-          VALIDATE_JAVASCRIPT_STANDARD: false
           VALIDATE_JSCPD: false
