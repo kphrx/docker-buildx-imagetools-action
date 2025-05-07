@@ -48,3 +48,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
           VALIDATE_JSON: false
+
+      - name: Run ESLint
+        if: always()
+        run: npm run lint
