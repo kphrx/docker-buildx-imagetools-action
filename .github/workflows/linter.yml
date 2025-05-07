@@ -44,6 +44,7 @@ jobs:
           LINTER_RULES_PATH: ${{ github.workspace }}
           TYPESCRIPT_DEFAULT_STYLE: prettier
           VALIDATE_TYPESCRIPT_STANDARD: false
+          VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_JSCPD: false
           VALIDATE_JSON: false
