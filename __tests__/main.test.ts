@@ -41,7 +41,7 @@ describe('action', () => {
 
   it('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
-    getBooleanInputMock.mockImplementation(name => {
+    getBooleanInputMock.mockImplementation((name) => {
       switch (name) {
         case 'dry-run':
           return true
@@ -49,7 +49,7 @@ describe('action', () => {
           return false
       }
     })
-    getInputMock.mockImplementation(name => {
+    getInputMock.mockImplementation((name) => {
       switch (name) {
         case 'sources':
           return 'sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907,sha256:c4ba6347b0e4258ce6a6de2401619316f982b7bcc529f73d2a410d0097730204'
@@ -75,13 +75,13 @@ describe('action', () => {
 
   it('sets a failed status', async () => {
     // Set the action's inputs as return values from core.getInput()
-    getBooleanInputMock.mockImplementation(name => {
+    getBooleanInputMock.mockImplementation((name) => {
       switch (name) {
         default:
           return false
       }
     })
-    getInputMock.mockImplementation(name => {
+    getInputMock.mockImplementation((name) => {
       switch (name) {
         case 'sources':
           return ''
