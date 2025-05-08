@@ -1,7 +1,7 @@
 // See: https://jestjs.io/docs/configuration
+import type { JestConfigWithTsJest } from 'ts-jest'
 
-/** @type {import('ts-jest').JestConfigWithTsJest} **/
-export default {
+const config: JestConfigWithTsJest = {
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: ['./src/**'],
@@ -38,3 +38,5 @@ export default {
   },
   verbose: true
 }
+
+export default config
