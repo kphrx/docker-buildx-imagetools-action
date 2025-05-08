@@ -93,7 +93,7 @@ export async function inspect(
 
   if (typeof format === 'boolean' && format) {
     args.push('--raw')
-  } else if (format) {
+  } else if (typeof format === 'string') {
     args.push('--format', format)
   }
   args.push(name)
