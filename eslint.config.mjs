@@ -32,6 +32,7 @@ export default [
     'plugin:prettier/recommended'
   ),
   {
+    files: ['**/*.ts'],
     plugins: {
       import: fixupPluginRules(_import),
       jest,
@@ -77,5 +78,8 @@ export default [
       'no-unused-vars': 'off',
       'prettier/prettier': 'error'
     }
+  },
+  {
+    files: ['**/*.js', '**/*.mjs']
   }
 ]
