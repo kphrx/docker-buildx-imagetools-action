@@ -8,15 +8,11 @@
 
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { create, createDryRun, inspect } from '../__fixtures__/imagetools'
+import * as imagetools from '../__fixtures__/imagetools'
 
 // Mock modules
-jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/imagetools', () => ({
-  create,
-  createDryRun,
-  inspect
-}))
+jest.mock('@actions/core', () => core)
+jest.unstable_mockModule('../src/imagetools', () => imagetools)
 
 const { run } = await import('../src/main')
 
@@ -48,13 +44,14 @@ describe('main.ts', () => {
       }
     })
 
-    createDryRun.mockImplementation(async (_toolkit, opts) =>
+    imagetools.createDryRun.mockImplementation(async (_toolkit, opts) =>
       JSON.stringify(opts)
     )
 
     await run()
 
     // Verify that all of the core library functions were called correctly
+    expect(core.setFailed).not.toHaveBeenCalled()
     expect(core.setOutput).toHaveBeenNthCalledWith(
       1,
       'metadata',
@@ -67,15 +64,13 @@ describe('main.ts', () => {
         tags: ['alpine:test']
       })
     )
-
-    expect(core.error).not.toHaveBeenCalled()
   })
 
   it('sets a failed status', async () => {
     await run()
 
     // Verify that all of the core library functions were called correctly
+    expect(core.setOutput).not.toHaveBeenCalled()
     expect(core.setFailed).toHaveBeenNthCalledWith(1, 'needs input sources')
-    expect(core.error).not.toHaveBeenCalled()
   })
 })
