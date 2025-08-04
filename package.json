@@ -47,7 +47,7 @@
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.14.0",
     "@vercel/ncc": "^0.38.1",
-    "eslint": "^9.31.0",
+    "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.32.0",
@@ -57,9 +57,9 @@
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.6.2",
     "prettier-eslint": "^16.3.0",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.4.1",
     "ts-jest-resolver": "^2.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.2"
   }
 }
