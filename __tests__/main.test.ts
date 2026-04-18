@@ -25,7 +25,7 @@ const { run } = await import('../src/main')
 
 describe('main.ts', () => {
   beforeEach(() => {
-    core.getInput.mockImplementation(() => '')
+    core.getInput.mockReturnValue('')
     core.getBooleanInput.mockImplementation((name) => {
       switch (name) {
         case 'dry-run':
@@ -37,12 +37,12 @@ describe('main.ts', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   test('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
-    core.getInput.mockImplementation((name) => {
+    core.getInput.mockClear().mockImplementation((name) => {
       switch (name) {
         case 'sources':
           return 'sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907,sha256:c4ba6347b0e4258ce6a6de2401619316f982b7bcc529f73d2a410d0097730204'
