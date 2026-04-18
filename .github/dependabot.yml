@@ -22,5 +22,3 @@ updates:
           - patch
       npm-production:
         dependency-type: production
-        update-types:
-          - patch
