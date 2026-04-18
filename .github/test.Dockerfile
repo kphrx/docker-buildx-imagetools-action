@@ -12,7 +12,11 @@ func main() {
 EOF
 
 RUN go build -o /bin/hello ./main.go
+RUN groupadd -r testuser && useradd --no-log-init -r -g testuser testuser
 
 FROM scratch
+COPY --from=build /etc/passwd /etc/group /etc/
 COPY --from=build /bin/hello /hello
+USER testuser
+HEALTHCHECK NONE
 CMD ["/hello"]
