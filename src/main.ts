@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as core from '@actions/core'
-import { GitHub } from '@docker/actions-toolkit/lib/github'
+import { GitHub } from '@docker/actions-toolkit/lib/github/github'
 import { Docker } from '@docker/actions-toolkit/lib/docker/docker'
 import { Toolkit } from '@docker/actions-toolkit/lib/toolkit'
 import { Util } from '@docker/actions-toolkit/lib/util'
