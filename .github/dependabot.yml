@@ -31,7 +31,7 @@ updates:
         patterns:
           - 'eslint'
           - 'eslint-*'
-          - '@eslint/'
+          - '@eslint/*'
           - '@typescript-eslint/*'
       npm-development:
         dependency-type: development
@@ -47,7 +47,7 @@ updates:
           # eslint
           - 'eslint'
           - 'eslint-*'
-          - '@eslint/'
+          - '@eslint/*'
           - '@typescript-eslint/*'
         update-types:
           - minor
