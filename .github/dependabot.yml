@@ -15,6 +15,22 @@ updates:
     schedule:
       interval: weekly
     groups:
+      rollup:
+        patterns:
+          - "rollup"
+          - "@rollup/*"
+      jest:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/"
+          - "@typescript-eslint/*"
+      eslint:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "ts-jest"
+          - "ts-jest-resolver"
       npm-development:
         dependency-type: development
         update-types:
