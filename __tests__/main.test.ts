@@ -6,7 +6,14 @@
  * variables following the pattern `INPUT_<INPUT_NAME>`.
  */
 
-import { jest } from '@jest/globals'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test
+} from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
 import * as imagetools from '../__fixtures__/imagetools'
 
@@ -18,9 +25,7 @@ const { run } = await import('../src/main')
 
 describe('main.ts', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-
-    core.getInput.mockImplementation(() => '')
+    core.getInput.mockReturnValue('')
     core.getBooleanInput.mockImplementation((name) => {
       switch (name) {
         case 'dry-run':
@@ -31,9 +36,13 @@ describe('main.ts', () => {
     })
   })
 
-  it('sets the metadata output', async () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+  })
+
+  test('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
-    core.getInput.mockImplementation((name) => {
+    core.getInput.mockClear().mockImplementation((name) => {
       switch (name) {
         case 'sources':
           return 'sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907,sha256:c4ba6347b0e4258ce6a6de2401619316f982b7bcc529f73d2a410d0097730204'
@@ -66,7 +75,7 @@ describe('main.ts', () => {
     )
   })
 
-  it('sets a failed status', async () => {
+  test('sets a failed status', async () => {
     await run()
 
     // Verify that all of the core library functions were called correctly

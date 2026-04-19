@@ -9,9 +9,9 @@ import type {
   ProxyConfig
 } from '@docker/actions-toolkit/lib/types/docker/docker'
 
-import { create, createDryRun, inspect } from './imagetools'
+import { create, createDryRun, inspect } from './imagetools.js'
 
-import { isNonEmptyArray } from './types'
+import { isNonEmptyArray } from './types.js'
 
 /**
  * The main function for the action.

@@ -1,7 +1,8 @@
 // See: https://jestjs.io/docs/configuration
-import type { JestConfigWithTsJest } from 'ts-jest'
+import type { Config } from 'jest'
+import { createDefaultEsmPreset } from 'ts-jest'
 
-const config: JestConfigWithTsJest = {
+const config: Config = {
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: ['./src/**'],
@@ -19,24 +20,14 @@ const config: JestConfigWithTsJest = {
   //     statements: 100
   //   }
   // },
-  extensionsToTreatAsEsm: ['.ts'],
   moduleFileExtensions: ['ts', 'js'],
-  preset: 'ts-jest',
   reporters: ['default'],
   resolver: 'ts-jest-resolver',
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/dist/', '/node_modules/'],
-  transform: {
-    '^.+\\.ts$': [
-      'ts-jest',
-      {
-        tsconfig: 'tsconfig.eslint.json',
-        useESM: true
-      }
-    ]
-  },
-  verbose: true
+  verbose: true,
+  ...createDefaultEsmPreset({ tsconfig: 'tsconfig.eslint.json' })
 }
 
 export default config
