@@ -1,11 +1,9 @@
 // See: https://eslint.org/docs/latest/use/configure/configuration-files
 
-import { fixupPluginRules } from '@eslint/compat'
 import { FlatCompat } from '@eslint/eslintrc'
 import js from '@eslint/js'
 import typescriptEslint from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
-import _import from 'eslint-plugin-import'
 import jest from 'eslint-plugin-jest'
 import globals from 'globals'
 
@@ -29,7 +27,6 @@ export default [
   {
     files: ['**/*.ts'],
     plugins: {
-      import: fixupPluginRules(_import),
       jest,
       '@typescript-eslint': typescriptEslint
     },
