@@ -6,6 +6,7 @@
  * variables following the pattern `INPUT_<INPUT_NAME>`.
  */
 
+import { describe, expect, test } from '@jest/globals'
 import { Toolkit } from '@docker/actions-toolkit/lib/toolkit'
 import { createDryRun } from '../src/imagetools'
 
@@ -13,7 +14,7 @@ import { createDryRun } from '../src/imagetools'
 const metadataRegex = /^{/
 
 describe('imagetools.ts', () => {
-  it('dry-run', async () => {
+  test('dry-run', async () => {
     const result = await createDryRun(new Toolkit(), {
       sources: [
         'sha256:5c40b3c27b9f13c873fefb2139765c56ce97fd50230f1f2d5c91e55dec171907',

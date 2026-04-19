@@ -6,7 +6,14 @@
  * variables following the pattern `INPUT_<INPUT_NAME>`.
  */
 
-import { jest } from '@jest/globals'
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test
+} from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
 import * as imagetools from '../__fixtures__/imagetools'
 
@@ -18,8 +25,6 @@ const { run } = await import('../src/main')
 
 describe('main.ts', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-
     core.getInput.mockImplementation(() => '')
     core.getBooleanInput.mockImplementation((name) => {
       switch (name) {
@@ -31,7 +36,11 @@ describe('main.ts', () => {
     })
   })
 
-  it('sets the metadata output', async () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('sets the metadata output', async () => {
     // Set the action's inputs as return values from core.getInput()
     core.getInput.mockImplementation((name) => {
       switch (name) {
@@ -66,7 +75,7 @@ describe('main.ts', () => {
     )
   })
 
-  it('sets a failed status', async () => {
+  test('sets a failed status', async () => {
     await run()
 
     // Verify that all of the core library functions were called correctly
