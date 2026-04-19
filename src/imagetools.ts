@@ -1,7 +1,7 @@
 import { Exec } from '@docker/actions-toolkit/lib/exec'
 import type { Toolkit } from '@docker/actions-toolkit/lib/toolkit'
 
-import { StdErrError } from './types'
+import { StdErrError } from './types.js'
 import type { NonEmptyArray } from './types'
 
 export interface CreateOptions {
