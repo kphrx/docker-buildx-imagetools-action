@@ -23,11 +23,10 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'js'],
   reporters: ['default'],
   resolver: 'ts-jest-resolver',
-  testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/dist/', '/node_modules/'],
   verbose: true,
-  ...createDefaultEsmPreset({ tsconfig: 'tsconfig.eslint.json' })
+  ...createDefaultEsmPreset()
 }
 
 export default config
