@@ -15,10 +15,40 @@ updates:
     schedule:
       interval: weekly
     groups:
+      npm-production:
+        dependency-type: production
+      rollup:
+        patterns:
+          - 'rollup'
+          - '@rollup/*'
+      jest:
+        patterns:
+          - 'jest'
+          - '@types/jest'
+          - 'ts-jest'
+          - 'ts-jest-resolver'
+      eslint:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/'
+          - '@typescript-eslint/*'
       npm-development:
         dependency-type: development
+        exclude-patterns:
+          # rollup
+          - 'rollup'
+          - '@rollup/*'
+          # jest
+          - 'jest'
+          - '@types/jest'
+          - 'ts-jest'
+          - 'ts-jest-resolver'
+          # eslint
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/'
+          - '@typescript-eslint/*'
         update-types:
           - minor
           - patch
-      npm-production:
-        dependency-type: production
