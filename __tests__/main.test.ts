@@ -18,7 +18,7 @@ import * as core from '../__fixtures__/core.js'
 import * as imagetools from '../__fixtures__/imagetools'
 
 // Mock modules
-jest.mock('@actions/core', () => core)
+jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('../src/imagetools', () => imagetools)
 
 const { run } = await import('../src/main')
