@@ -1,0 +1,11 @@
+---
+name: browserify-zlib
+version: 0.1.4
+type: npm
+summary: Full zlib module for browserify
+homepage:
+license: mit
+licenses:
+- sources: README.md
+  text: MIT
+notices: []

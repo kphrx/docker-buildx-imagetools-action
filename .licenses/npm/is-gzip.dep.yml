@@ -1,0 +1,11 @@
+---
+name: is-gzip
+version: 1.0.0
+type: npm
+summary: Check if a Buffer/Uint8Array is a GZIP file
+homepage:
+license: mit
+licenses:
+- sources: README.md
+  text: "[MIT License](http://en.wikipedia.org/wiki/MIT_License) © [Kevin Mårtensson](https://github.com/kevva)"
+notices: []
