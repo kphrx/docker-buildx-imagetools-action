@@ -52,14 +52,11 @@ jobs:
         id: npm-ci-test
         run: npm run ci-test
 
-      - if:
-          ${{ github.event_name == 'workflow_dispatch' && inputs.update-coverage
-          }}
-        name: Upload coverage
+      - name: Upload coverage
         uses: actions/upload-artifact@v7
         with:
-          name: coverage
-          path: coverage
+          path: coverage/coverage-summary.json
+          archive: false
 
   update-coverage:
     needs: test-typescript
@@ -87,9 +84,11 @@ jobs:
         run: npm ci
 
       - name: Download coverage
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
-          name: coverage
+          name: coverage-summary.json
+          path: coverage/
+          skip-decompress: true
 
       - name: Update Coverage Badge
         id: npm-coverage
