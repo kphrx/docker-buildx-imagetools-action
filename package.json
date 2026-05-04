@@ -38,7 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "@docker/actions-toolkit": "^0.89.0"
+    "@docker/actions-toolkit": "^0.89.1"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",
