@@ -21,6 +21,8 @@ jobs:
       dependency-type: ${{ steps.dependabot-metadata.outputs.dependency-type }}
       package-ecosystem:
         ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
+      dependency-group:
+        ${{ steps.dependabot-metadata.outputs.dependency-group }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -37,8 +39,9 @@ jobs:
     # We only need to build the dist/ folder if the PR relates a production NPM dependency, otherwise we don't expect changes.
     if:
       needs.fetch-dependabot-metadata.outputs.package-ecosystem ==
-      'npm_and_yarn' && contains(fromJson('["direct:production", "indirect"]'),
-      needs.fetch-dependabot-metadata.outputs.dependency-type)
+      'npm_and_yarn' && (contains(fromJson('["direct:production", "indirect"]'),
+      needs.fetch-dependabot-metadata.outputs.dependency-type) ||
+      needs.fetch-dependabot-metadata.outputs.dependency-group == 'rollup')
     steps:
       - name: Generate token
         id: generate_token
