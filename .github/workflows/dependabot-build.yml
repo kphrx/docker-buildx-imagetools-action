@@ -24,7 +24,7 @@ jobs:
       dependency-group:
         ${{ steps.dependabot-metadata.outputs.dependency-group }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
@@ -50,7 +50,7 @@ jobs:
           app-id: ${{ secrets.ACTION_AUTOMATION_APP_ID }}
           private-key: ${{ secrets.ACTION_AUTOMATION_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           # Check out using an app token so any pushed changes will trigger checkruns
