@@ -1,6 +1,6 @@
 {
   "name": "GitHub Actions (TypeScript)",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
   "postCreateCommand": "npm install",
   "customizations": {
     "codespaces": {
@@ -37,6 +37,6 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers-contrib/features/prettier:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {}
   }
 }
