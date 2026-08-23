@@ -38,6 +38,7 @@ import require$$1$4 from 'node:dns';
 import require$$5$3, { StringDecoder } from 'string_decoder';
 import * as child from 'child_process';
 import { setTimeout as setTimeout$1 } from 'timers';
+import { text } from 'stream/consumers';
 import * as stream$1 from 'stream';
 import { Readable } from 'stream';
 import require$$5$4, { URL as URL$1 } from 'url';
@@ -35731,6 +35732,8 @@ function jwtDecode(token, options) {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const releasesRetryDelays = [1000, 3000];
+const retryableErrorCodes = new Set(['ECONNRESET', 'ETIMEDOUT', 'EAI_AGAIN', 'ECONNREFUSED', 'EPIPE', 'ERR_STREAM_PREMATURE_CLOSE']);
 class GitHub {
     githubToken;
     octokit;
@@ -35758,17 +35761,40 @@ class GitHub {
     }
     async releasesRaw(name, opts, token) {
         const url = `https://raw.githubusercontent.com/${opts.owner}/${opts.repo}/${opts.ref}/${opts.path}`;
-        const http = new HttpClient('docker-actions-toolkit');
-        // prettier-ignore
-        const httpResp = await http.get(url, token ? {
-            Authorization: `token ${token}`
-        } : undefined);
-        const dt = await httpResp.readBody();
-        const statusCode = httpResp.message.statusCode || 500;
-        if (statusCode >= 400) {
-            throw new Error(`Failed to get ${name} releases from ${url} with status code ${statusCode}: ${dt}`);
+        const headers = token ? { Authorization: `token ${token}` } : undefined;
+        let lastError;
+        for (let attempt = 0; attempt <= releasesRetryDelays.length; attempt++) {
+            try {
+                const http = new HttpClient('docker-actions-toolkit');
+                const httpResp = await http.get(url, headers);
+                const body = await text(httpResp.message);
+                const statusCode = httpResp.message.statusCode || 500;
+                if (statusCode >= 400) {
+                    const error = new Error(`Failed to get ${name} releases from ${url} with status code ${statusCode}: ${body}`);
+                    error.statusCode = statusCode;
+                    throw error;
+                }
+                return JSON.parse(body);
+            }
+            catch (e) {
+                lastError = e instanceof Error ? e : new Error(`${e}`);
+                if (!GitHub.isRetryableReleaseError(lastError) || attempt === releasesRetryDelays.length) {
+                    throw lastError;
+                }
+                info(`${lastError.message}. Retrying (${attempt + 1}/${releasesRetryDelays.length})...`);
+                await new Promise(resolve => setTimeout(resolve, releasesRetryDelays[attempt]));
+            }
         }
-        return JSON.parse(dt);
+        throw lastError || new Error(`Failed to get ${name} releases from ${url}`);
+    }
+    static isRetryableReleaseError(error) {
+        const statusCode = error.statusCode;
+        if (statusCode) {
+            return statusCode === 408 || statusCode === 429 || statusCode >= 500;
+        }
+        const code = error.code;
+        const message = error.message.toLowerCase();
+        return (code && retryableErrorCodes.has(code)) || message.includes('socket hang up') || message.includes('read econnreset');
     }
     static get context() {
         return context$2;
@@ -114332,8 +114358,10 @@ function requireCheckpoint () {
 	    return signedNote.signatures.some((signature) => {
 	        // Find the transparency log instance with the matching key hint
 	        const tlog = tlogs.find((tlog) => core_1.crypto.bufferEqual(tlog.logID.subarray(0, 4), signature.keyHint) &&
-	            tlog.baseURL.match(signature.name) // Match the name to the base URL of the tlog
-	        );
+	            // Match the signature name to the base URL of the tlog. The name is
+	            // attacker-controlled, so it MUST be compared as a literal substring
+	            // and never coerced into a RegExp (as String.prototype.match would).
+	            tlog.baseURL.includes(signature.name));
 	        if (!tlog) {
 	            return false;
 	        }
@@ -114419,7 +114447,19 @@ function requireCheckpoint () {
 	            });
 	        }
 	        const origin = lines[0];
-	        const logSize = BigInt(lines[1]);
+	        // logSize is attacker-controlled and parsed before any signature is
+	        // verified, so guard against BigInt() throwing an uncaught SyntaxError on
+	        // malformed input.
+	        let logSize;
+	        try {
+	            logSize = BigInt(lines[1]);
+	        }
+	        catch {
+	            throw new error_1.VerificationError({
+	                code: 'TLOG_INCLUSION_PROOF_ERROR',
+	                message: 'invalid checkpoint log size',
+	            });
+	        }
 	        const rootHash = Buffer.from(lines[2], 'base64');
 	        const rest = lines.slice(3);
 	        return new LogCheckpoint(origin, logSize, rootHash, rest);
@@ -114459,7 +114499,18 @@ function requireMerkle () {
 	const RFC6962_NODE_HASH_PREFIX = Buffer.from([0x01]);
 	function verifyMerkleInclusion(entry, checkpoint) {
 	    const inclusionProof = entry.inclusionProof;
-	    const logIndex = BigInt(inclusionProof.logIndex);
+	    // logIndex is attacker-controlled; parse defensively so malformed input
+	    // yields a VerificationError rather than an uncaught SyntaxError.
+	    let logIndex;
+	    try {
+	        logIndex = BigInt(inclusionProof.logIndex);
+	    }
+	    catch {
+	        throw new error_1.VerificationError({
+	            code: 'TLOG_INCLUSION_PROOF_ERROR',
+	            message: 'invalid inclusion proof log index',
+	        });
+	    }
 	    const treeSize = BigInt(checkpoint.logSize);
 	    if (logIndex < 0n || logIndex >= treeSize) {
 	        throw new error_1.VerificationError({
@@ -114645,7 +114696,19 @@ function requireTlog () {
 	// Verifies that the given tlog entry matches the supplied signature content.
 	function verifyTLogBody(entry, sigContent) {
 	    const { kind, version } = entry.kindVersion;
-	    const body = JSON.parse(entry.canonicalizedBody.toString('utf8'));
+	    // The canonicalized body is attacker-controlled; parse defensively so
+	    // malformed JSON yields a VerificationError rather than an uncaught
+	    // SyntaxError.
+	    let body;
+	    try {
+	        body = JSON.parse(entry.canonicalizedBody.toString('utf8'));
+	    }
+	    catch {
+	        throw new error_1.VerificationError({
+	            code: 'TLOG_BODY_ERROR',
+	            message: 'invalid canonicalized body',
+	        });
+	    }
 	    // validate body
 	    if (kind !== body.kind || version !== body.apiVersion) {
 	        throw new error_1.VerificationError({
@@ -114820,16 +114883,25 @@ function requireVerifier () {
 	    }
 	    // Checks that the tlog entries are valid for the supplied content
 	    verifyTLogs({ signature: content, tlogEntries }) {
-	        let tlogCount = 0;
+	        const entryIDs = [];
 	        tlogEntries.forEach((entry) => {
-	            tlogCount++;
 	            (0, tlog_1.verifyTLogInclusion)(entry, this.trustMaterial.tlogs);
 	            (0, tlog_1.verifyTLogBody)(entry, content);
+	            entryIDs.push({ logID: entry.logId.keyId, logIndex: entry.logIndex });
 	        });
-	        if (tlogCount < this.options.tlogThreshold) {
+	        // Check for duplicate entries so that repeated copies of a single entry
+	        // cannot be counted more than once toward the threshold. The timestamp and
+	        // SCT checks above dedupe their collections the same way.
+	        if (containsDupes(entryIDs)) {
 	            throw new error_1.VerificationError({
 	                code: 'TLOG_ERROR',
-	                message: `expected ${this.options.tlogThreshold} tlog entries, got ${tlogCount}`,
+	                message: 'duplicate tlog entry',
+	            });
+	        }
+	        if (entryIDs.length < this.options.tlogThreshold) {
+	            throw new error_1.VerificationError({
+	                code: 'TLOG_ERROR',
+	                message: `expected ${this.options.tlogThreshold} tlog entries, got ${entryIDs.length}`,
 	            });
 	        }
 	    }
