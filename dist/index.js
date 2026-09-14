@@ -16307,15 +16307,15 @@ function requireRedirect () {
 	return redirect;
 }
 
-var retry$2;
-var hasRequiredRetry$1;
+var retry$5;
+var hasRequiredRetry$3;
 
-function requireRetry$1 () {
-	if (hasRequiredRetry$1) return retry$2;
-	hasRequiredRetry$1 = 1;
+function requireRetry$3 () {
+	if (hasRequiredRetry$3) return retry$5;
+	hasRequiredRetry$3 = 1;
 	const RetryHandler = requireRetryHandler();
 
-	retry$2 = globalOpts => {
+	retry$5 = globalOpts => {
 	  return dispatch => {
 	    return function retryInterceptor (opts, handler) {
 	      return dispatch(
@@ -16331,7 +16331,7 @@ function requireRetry$1 () {
 	    }
 	  }
 	};
-	return retry$2;
+	return retry$5;
 }
 
 var dump;
@@ -28168,7 +28168,7 @@ function requireUndici () {
 	undici.createRedirectInterceptor = createRedirectInterceptor;
 	undici.interceptors = {
 	  redirect: requireRedirect(),
-	  retry: requireRetry$1(),
+	  retry: requireRetry$3(),
 	  dump: requireDump(),
 	  dns: requireDns()
 	};
@@ -30393,7 +30393,7 @@ let Context$1 = class Context {
     }
 };
 
-var lib$3 = {};
+var lib$4 = {};
 
 var proxy = {};
 
@@ -30498,13 +30498,13 @@ function requireProxy () {
 	return proxy;
 }
 
-var hasRequiredLib$3;
+var hasRequiredLib$4;
 
-function requireLib$3 () {
-	if (hasRequiredLib$3) return lib$3;
-	hasRequiredLib$3 = 1;
+function requireLib$4 () {
+	if (hasRequiredLib$4) return lib$4;
+	hasRequiredLib$4 = 1;
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	var __createBinding = (lib$3 && lib$3.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	var __createBinding = (lib$4 && lib$4.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    var desc = Object.getOwnPropertyDescriptor(m, k);
 	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -30515,12 +30515,12 @@ function requireLib$3 () {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
 	}));
-	var __setModuleDefault = (lib$3 && lib$3.__setModuleDefault) || (Object.create ? (function(o, v) {
+	var __setModuleDefault = (lib$4 && lib$4.__setModuleDefault) || (Object.create ? (function(o, v) {
 	    Object.defineProperty(o, "default", { enumerable: true, value: v });
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (lib$3 && lib$3.__importStar) || (function () {
+	var __importStar = (lib$4 && lib$4.__importStar) || (function () {
 	    var ownKeys = function(o) {
 	        ownKeys = Object.getOwnPropertyNames || function (o) {
 	            var ar = [];
@@ -30537,7 +30537,7 @@ function requireLib$3 () {
 	        return result;
 	    };
 	})();
-	var __awaiter = (lib$3 && lib$3.__awaiter) || function (thisArg, _arguments, P, generator) {
+	var __awaiter = (lib$4 && lib$4.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -30546,10 +30546,10 @@ function requireLib$3 () {
 	        step((generator = generator.apply(thisArg, _arguments || [])).next());
 	    });
 	};
-	Object.defineProperty(lib$3, "__esModule", { value: true });
-	lib$3.HttpClient = lib$3.HttpClientResponse = lib$3.HttpClientError = lib$3.MediaTypes = lib$3.Headers = lib$3.HttpCodes = void 0;
-	lib$3.getProxyUrl = getProxyUrl;
-	lib$3.isHttps = isHttps;
+	Object.defineProperty(lib$4, "__esModule", { value: true });
+	lib$4.HttpClient = lib$4.HttpClientResponse = lib$4.HttpClientError = lib$4.MediaTypes = lib$4.Headers = lib$4.HttpCodes = void 0;
+	lib$4.getProxyUrl = getProxyUrl;
+	lib$4.isHttps = isHttps;
 	const http = __importStar(http__default);
 	const https = __importStar(https__default);
 	const pm = __importStar(requireProxy());
@@ -30584,16 +30584,16 @@ function requireLib$3 () {
 	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
 	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
 	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
-	})(HttpCodes || (lib$3.HttpCodes = HttpCodes = {}));
+	})(HttpCodes || (lib$4.HttpCodes = HttpCodes = {}));
 	var Headers;
 	(function (Headers) {
 	    Headers["Accept"] = "accept";
 	    Headers["ContentType"] = "content-type";
-	})(Headers || (lib$3.Headers = Headers = {}));
+	})(Headers || (lib$4.Headers = Headers = {}));
 	var MediaTypes;
 	(function (MediaTypes) {
 	    MediaTypes["ApplicationJson"] = "application/json";
-	})(MediaTypes || (lib$3.MediaTypes = MediaTypes = {}));
+	})(MediaTypes || (lib$4.MediaTypes = MediaTypes = {}));
 	/**
 	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
 	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
@@ -30625,7 +30625,7 @@ function requireLib$3 () {
 	        Object.setPrototypeOf(this, HttpClientError.prototype);
 	    }
 	}
-	lib$3.HttpClientError = HttpClientError;
+	lib$4.HttpClientError = HttpClientError;
 	class HttpClientResponse {
 	    constructor(message) {
 	        this.message = message;
@@ -30657,7 +30657,7 @@ function requireLib$3 () {
 	        });
 	    }
 	}
-	lib$3.HttpClientResponse = HttpClientResponse;
+	lib$4.HttpClientResponse = HttpClientResponse;
 	function isHttps(requestUrl) {
 	    const parsedUrl = new URL(requestUrl);
 	    return parsedUrl.protocol === 'https:';
@@ -31236,13 +31236,13 @@ function requireLib$3 () {
 	        });
 	    }
 	}
-	lib$3.HttpClient = HttpClient;
+	lib$4.HttpClient = HttpClient;
 	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
 	
-	return lib$3;
+	return lib$4;
 }
 
-var libExports$1 = requireLib$3();
+var libExports$2 = requireLib$4();
 
 var __awaiter$c = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -31263,11 +31263,11 @@ function getAuthString(token, options) {
     return typeof options.auth === 'string' ? options.auth : `token ${token}`;
 }
 function getProxyAgent(destinationUrl) {
-    const hc = new libExports$1.HttpClient();
+    const hc = new libExports$2.HttpClient();
     return hc.getAgent(destinationUrl);
 }
 function getProxyAgentDispatcher(destinationUrl) {
-    const hc = new libExports$1.HttpClient();
+    const hc = new libExports$2.HttpClient();
     return hc.getAgentDispatcher(destinationUrl);
 }
 function getProxyFetch(destinationUrl) {
@@ -35872,6 +35872,372 @@ class GitHub {
         }
     }
 }
+
+var retry$4 = {};
+
+var retry_operation;
+var hasRequiredRetry_operation;
+
+function requireRetry_operation () {
+	if (hasRequiredRetry_operation) return retry_operation;
+	hasRequiredRetry_operation = 1;
+	function RetryOperation(timeouts, options) {
+	  // Compatibility for the old (timeouts, retryForever) signature
+	  if (typeof options === 'boolean') {
+	    options = { forever: options };
+	  }
+
+	  this._originalTimeouts = JSON.parse(JSON.stringify(timeouts));
+	  this._timeouts = timeouts;
+	  this._options = options || {};
+	  this._maxRetryTime = options && options.maxRetryTime || Infinity;
+	  this._fn = null;
+	  this._errors = [];
+	  this._attempts = 1;
+	  this._operationTimeout = null;
+	  this._operationTimeoutCb = null;
+	  this._timeout = null;
+	  this._operationStart = null;
+	  this._timer = null;
+
+	  if (this._options.forever) {
+	    this._cachedTimeouts = this._timeouts.slice(0);
+	  }
+	}
+	retry_operation = RetryOperation;
+
+	RetryOperation.prototype.reset = function() {
+	  this._attempts = 1;
+	  this._timeouts = this._originalTimeouts.slice(0);
+	};
+
+	RetryOperation.prototype.stop = function() {
+	  if (this._timeout) {
+	    clearTimeout(this._timeout);
+	  }
+	  if (this._timer) {
+	    clearTimeout(this._timer);
+	  }
+
+	  this._timeouts       = [];
+	  this._cachedTimeouts = null;
+	};
+
+	RetryOperation.prototype.retry = function(err) {
+	  if (this._timeout) {
+	    clearTimeout(this._timeout);
+	  }
+
+	  if (!err) {
+	    return false;
+	  }
+	  var currentTime = new Date().getTime();
+	  if (err && currentTime - this._operationStart >= this._maxRetryTime) {
+	    this._errors.push(err);
+	    this._errors.unshift(new Error('RetryOperation timeout occurred'));
+	    return false;
+	  }
+
+	  this._errors.push(err);
+
+	  var timeout = this._timeouts.shift();
+	  if (timeout === undefined) {
+	    if (this._cachedTimeouts) {
+	      // retry forever, only keep last error
+	      this._errors.splice(0, this._errors.length - 1);
+	      timeout = this._cachedTimeouts.slice(-1);
+	    } else {
+	      return false;
+	    }
+	  }
+
+	  var self = this;
+	  this._timer = setTimeout(function() {
+	    self._attempts++;
+
+	    if (self._operationTimeoutCb) {
+	      self._timeout = setTimeout(function() {
+	        self._operationTimeoutCb(self._attempts);
+	      }, self._operationTimeout);
+
+	      if (self._options.unref) {
+	          self._timeout.unref();
+	      }
+	    }
+
+	    self._fn(self._attempts);
+	  }, timeout);
+
+	  if (this._options.unref) {
+	      this._timer.unref();
+	  }
+
+	  return true;
+	};
+
+	RetryOperation.prototype.attempt = function(fn, timeoutOps) {
+	  this._fn = fn;
+
+	  if (timeoutOps) {
+	    if (timeoutOps.timeout) {
+	      this._operationTimeout = timeoutOps.timeout;
+	    }
+	    if (timeoutOps.cb) {
+	      this._operationTimeoutCb = timeoutOps.cb;
+	    }
+	  }
+
+	  var self = this;
+	  if (this._operationTimeoutCb) {
+	    this._timeout = setTimeout(function() {
+	      self._operationTimeoutCb();
+	    }, self._operationTimeout);
+	  }
+
+	  this._operationStart = new Date().getTime();
+
+	  this._fn(this._attempts);
+	};
+
+	RetryOperation.prototype.try = function(fn) {
+	  console.log('Using RetryOperation.try() is deprecated');
+	  this.attempt(fn);
+	};
+
+	RetryOperation.prototype.start = function(fn) {
+	  console.log('Using RetryOperation.start() is deprecated');
+	  this.attempt(fn);
+	};
+
+	RetryOperation.prototype.start = RetryOperation.prototype.try;
+
+	RetryOperation.prototype.errors = function() {
+	  return this._errors;
+	};
+
+	RetryOperation.prototype.attempts = function() {
+	  return this._attempts;
+	};
+
+	RetryOperation.prototype.mainError = function() {
+	  if (this._errors.length === 0) {
+	    return null;
+	  }
+
+	  var counts = {};
+	  var mainError = null;
+	  var mainErrorCount = 0;
+
+	  for (var i = 0; i < this._errors.length; i++) {
+	    var error = this._errors[i];
+	    var message = error.message;
+	    var count = (counts[message] || 0) + 1;
+
+	    counts[message] = count;
+
+	    if (count >= mainErrorCount) {
+	      mainError = error;
+	      mainErrorCount = count;
+	    }
+	  }
+
+	  return mainError;
+	};
+	return retry_operation;
+}
+
+var hasRequiredRetry$2;
+
+function requireRetry$2 () {
+	if (hasRequiredRetry$2) return retry$4;
+	hasRequiredRetry$2 = 1;
+	(function (exports) {
+		var RetryOperation = requireRetry_operation();
+
+		exports.operation = function(options) {
+		  var timeouts = exports.timeouts(options);
+		  return new RetryOperation(timeouts, {
+		      forever: options && (options.forever || options.retries === Infinity),
+		      unref: options && options.unref,
+		      maxRetryTime: options && options.maxRetryTime
+		  });
+		};
+
+		exports.timeouts = function(options) {
+		  if (options instanceof Array) {
+		    return [].concat(options);
+		  }
+
+		  var opts = {
+		    retries: 10,
+		    factor: 2,
+		    minTimeout: 1 * 1000,
+		    maxTimeout: Infinity,
+		    randomize: false
+		  };
+		  for (var key in options) {
+		    opts[key] = options[key];
+		  }
+
+		  if (opts.minTimeout > opts.maxTimeout) {
+		    throw new Error('minTimeout is greater than maxTimeout');
+		  }
+
+		  var timeouts = [];
+		  for (var i = 0; i < opts.retries; i++) {
+		    timeouts.push(this.createTimeout(i, opts));
+		  }
+
+		  if (options && options.forever && !timeouts.length) {
+		    timeouts.push(this.createTimeout(i, opts));
+		  }
+
+		  // sort the array numerically ascending
+		  timeouts.sort(function(a,b) {
+		    return a - b;
+		  });
+
+		  return timeouts;
+		};
+
+		exports.createTimeout = function(attempt, opts) {
+		  var random = (opts.randomize)
+		    ? (Math.random() + 1)
+		    : 1;
+
+		  var timeout = Math.round(random * Math.max(opts.minTimeout, 1) * Math.pow(opts.factor, attempt));
+		  timeout = Math.min(timeout, opts.maxTimeout);
+
+		  return timeout;
+		};
+
+		exports.wrap = function(obj, options, methods) {
+		  if (options instanceof Array) {
+		    methods = options;
+		    options = null;
+		  }
+
+		  if (!methods) {
+		    methods = [];
+		    for (var key in obj) {
+		      if (typeof obj[key] === 'function') {
+		        methods.push(key);
+		      }
+		    }
+		  }
+
+		  for (var i = 0; i < methods.length; i++) {
+		    var method   = methods[i];
+		    var original = obj[method];
+
+		    obj[method] = function retryWrapper(original) {
+		      var op       = exports.operation(options);
+		      var args     = Array.prototype.slice.call(arguments, 1);
+		      var callback = args.pop();
+
+		      args.push(function(err) {
+		        if (op.retry(err)) {
+		          return;
+		        }
+		        if (err) {
+		          arguments[0] = op.mainError();
+		        }
+		        callback.apply(this, arguments);
+		      });
+
+		      op.attempt(function() {
+		        original.apply(obj, args);
+		      });
+		    }.bind(obj, original);
+		    obj[method].options = options;
+		  }
+		}; 
+	} (retry$4));
+	return retry$4;
+}
+
+var retry$3;
+var hasRequiredRetry$1;
+
+function requireRetry$1 () {
+	if (hasRequiredRetry$1) return retry$3;
+	hasRequiredRetry$1 = 1;
+	retry$3 = requireRetry$2();
+	return retry$3;
+}
+
+var lib$3;
+var hasRequiredLib$3;
+
+function requireLib$3 () {
+	if (hasRequiredLib$3) return lib$3;
+	hasRequiredLib$3 = 1;
+	// Packages
+	var retrier = requireRetry$1();
+
+	function retry(fn, opts) {
+	  function run(resolve, reject) {
+	    var options = opts || {};
+	    var op;
+
+	    // Default `randomize` to true
+	    if (!('randomize' in options)) {
+	      options.randomize = true;
+	    }
+
+	    op = retrier.operation(options);
+
+	    // We allow the user to abort retrying
+	    // this makes sense in the cases where
+	    // knowledge is obtained that retrying
+	    // would be futile (e.g.: auth errors)
+
+	    function bail(err) {
+	      reject(err || new Error('Aborted'));
+	    }
+
+	    function onError(err, num) {
+	      if (err.bail) {
+	        bail(err);
+	        return;
+	      }
+
+	      if (!op.retry(err)) {
+	        reject(op.mainError());
+	      } else if (options.onRetry) {
+	        options.onRetry(err, num);
+	      }
+	    }
+
+	    function runAttempt(num) {
+	      var val;
+
+	      try {
+	        val = fn(bail, num);
+	      } catch (err) {
+	        onError(err, num);
+	        return;
+	      }
+
+	      Promise.resolve(val)
+	        .then(resolve)
+	        .catch(function catchIt(err) {
+	          onError(err, num);
+	        });
+	    }
+
+	    op.attempt(runAttempt);
+	  }
+
+	  return new Promise(run);
+	}
+
+	lib$3 = retry;
+	return lib$3;
+}
+
+var libExports$1 = requireLib$3();
+var retry$2 = /*@__PURE__*/getDefaultExportFromCjs(libExports$1);
 
 var tmp = {exports: {}};
 
@@ -90126,8 +90492,10 @@ class Cache {
     async save(file, skipState) {
         debug(`Cache.save ${file}`);
         const cachePath = this.copyToCache(file);
-        const htcPath = await cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
-        debug(`Cache.save cached to hosted tool cache ${htcPath}`);
+        const htcPath = await this.cacheToHostedToolCache();
+        if (htcPath) {
+            debug(`Cache.save cached to hosted tool cache ${htcPath}`);
+        }
         if (!this.ghaNoCache && isFeatureAvailable()) {
             if (skipState) {
                 try {
@@ -90150,7 +90518,7 @@ class Cache {
     }
     async find() {
         try {
-            let htcPath = find(this.opts.htcName, this.opts.htcVersion, this.platform());
+            const htcPath = find(this.opts.htcName, this.opts.htcVersion, this.platform());
             if (htcPath) {
                 info(`Restored from hosted tool cache ${htcPath}`);
                 return this.copyToCache(`${htcPath}/${this.opts.cacheFile}`);
@@ -90159,9 +90527,15 @@ class Cache {
                 debug(`GitHub Actions cache feature available`);
                 if (await restoreCache([this.cacheDir], this.ghaCacheKey)) {
                     info(`Restored ${this.ghaCacheKey} from GitHub Actions cache`);
-                    htcPath = await cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
-                    info(`Cached to hosted tool cache ${htcPath}`);
-                    return this.copyToCache(`${htcPath}/${this.opts.cacheFile}`);
+                    if (!fs__default.existsSync(this.cachePath)) {
+                        warning(`Cache file ${this.cachePath} does not exist`);
+                        return '';
+                    }
+                    const htcCachePath = await this.cacheToHostedToolCache();
+                    if (htcCachePath) {
+                        info(`Cached to hosted tool cache ${htcCachePath}`);
+                    }
+                    return this.cachePath;
                 }
             }
             else if (this.ghaNoCache) {
@@ -90205,6 +90579,15 @@ class Cache {
         info(`Copying ${file} to ${this.cachePath}`);
         fs__default.copyFileSync(file, this.cachePath);
         return this.cachePath;
+    }
+    async cacheToHostedToolCache() {
+        try {
+            return await cacheDir(this.cacheDir, this.opts.htcName, this.opts.htcVersion, this.platform());
+        }
+        catch (e) {
+            info(`Failed to cache to hosted tool cache: ${e}`);
+        }
+        return '';
     }
     platform() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101110,20 +101493,18 @@ class Docker {
             }
         }
         let pulled = true;
-        await Docker.getExecOutput(['pull', image], {
-            ignoreReturnCode: true
-        }).then(res => {
-            if (res.stderr.length > 0 && res.exitCode != 0) {
-                pulled = false;
-                const err = res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error';
-                if (cacheFoundPath) {
-                    warning(`Failed to pull image, using one from cache: ${err}`);
-                }
-                else {
-                    throw new Error(err);
-                }
+        try {
+            await Docker.pullWithRetry(image);
+        }
+        catch (e) {
+            pulled = false;
+            if (cacheFoundPath) {
+                warning(`Failed to pull image, using one from cache: ${e.message}`);
             }
-        });
+            else {
+                throw e;
+            }
+        }
         if (cache && pulled) {
             const imageTarPath = path__default.join(Context.tmpDir(), `${Util.hash(image)}.tar`);
             await Docker.getExecOutput(['save', '-o', imageTarPath, image], {
@@ -101138,6 +101519,34 @@ class Docker {
                 }
             });
         }
+    }
+    static async pullWithRetry(image) {
+        const retries = 5;
+        await retry$2(async (bail) => {
+            const res = await Docker.getExecOutput(['pull', image], {
+                ignoreReturnCode: true
+            });
+            if (res.stderr.length > 0 && res.exitCode != 0) {
+                const err = res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error';
+                if (!Docker.isPullTransientError(err)) {
+                    bail(new Error(err));
+                    return;
+                }
+                throw new Error(err);
+            }
+        }, {
+            retries: retries - 1,
+            minTimeout: 1000,
+            factor: 2,
+            onRetry: (err, i) => {
+                debug(`Docker pull failed, retrying (${i}/${retries})...\n${err}`);
+            }
+        });
+    }
+    static isPullTransientError(err) {
+        return (/Client\.Timeout exceeded|TLS handshake timeout|i\/o timeout|context deadline exceeded|request canceled|connection reset by peer|connection refused|connection timed out|temporary failure|unexpected EOF|\bEOF\b|server misbehaving/i.test(err) ||
+            /\b(500|502|503|504)\b/.test(err) ||
+            /\b(service unavailable|bad gateway|gateway timeout|internal server error)\b/i.test(err));
     }
 }
 
@@ -115665,7 +116074,9 @@ class Sigstore {
         const parsedBundle = JSON.parse(fs__default.readFileSync(bundlePath, 'utf-8'));
         const bundle = distExports$2.bundleFromJSON(parsedBundle);
         info(`Fetching Sigstore TUF trusted root metadata`);
-        const trustedRoot = await distExports$1.getTrustedRoot();
+        const trustedRoot = await distExports$1.getTrustedRoot({
+            retry: { retries: 5 }
+        });
         const trustMaterial = distExports.toTrustMaterial(trustedRoot);
         try {
             info(`Verifying artifact signature`);
@@ -115674,19 +116085,9 @@ class Sigstore {
             // collect transparency log ID if available
             const tlogEntries = bundle.verificationMaterial.tlogEntries;
             const tlogID = tlogEntries.length > 0 ? tlogEntries[0].logIndex : undefined;
-            // TODO: remove when subjectAlternativeName check with regex is supported: https://github.com/sigstore/sigstore-js/pull/1556
-            if (opts?.subjectAlternativeName && opts?.subjectAlternativeName instanceof RegExp) {
-                const subjectAltName = signingCert.subjectAltName?.replace(/^uri:/i, '');
-                if (!subjectAltName) {
-                    throw new Error('Signing certificate does not contain subjectAltName');
-                }
-                else if (!subjectAltName.match(opts.subjectAlternativeName)) {
-                    throw new Error(`Signing certificate subjectAlternativeName "${subjectAltName}" does not match expected pattern`);
-                }
-            }
             const verifier = new distExports.Verifier(trustMaterial);
             const signer = verifier.verify(signedEntity, {
-                subjectAlternativeName: opts?.subjectAlternativeName && typeof opts.subjectAlternativeName === 'string' ? opts.subjectAlternativeName : undefined,
+                subjectAlternativeName: opts?.subjectAlternativeName,
                 extensions: opts?.issuer ? { issuer: opts.issuer } : undefined
             });
             debug(`Sigstore.verifyArtifact signer: ${JSON.stringify(signer)}`);
